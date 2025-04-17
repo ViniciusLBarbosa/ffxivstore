@@ -45,7 +45,9 @@ import { InputAdornment, FormControl, InputLabel, ListItemText, Checkbox } from 
 const getStatusColor = (status) => {
   const statusColors = {
     'pending': 'warning',
-    'processing': 'info',
+    'awaiting_payment': 'info',
+    'payment_confirmed': 'info',
+    'processing': 'primary',
     'completed': 'success',
     'cancelled': 'error'
   };
@@ -55,6 +57,8 @@ const getStatusColor = (status) => {
 const getStatusLabel = (status) => {
   const statusLabels = {
     'pending': 'Pendente',
+    'awaiting_payment': 'Aguardando Pagamento',
+    'payment_confirmed': 'Pagamento Confirmado',
     'processing': 'Em Processamento',
     'completed': 'Concluído',
     'cancelled': 'Cancelado'
@@ -162,6 +166,8 @@ const OrderCard = ({ order, onStatusChange }) => {
               }}
             >
               <MenuItem onClick={() => handleStatusChange('pending')}>Marcar como Pendente</MenuItem>
+              <MenuItem onClick={() => handleStatusChange('awaiting_payment')}>Marcar como Aguardando Pagamento</MenuItem>
+              <MenuItem onClick={() => handleStatusChange('payment_confirmed')}>Marcar como Pagamento Confirmado</MenuItem>
               <MenuItem onClick={() => handleStatusChange('processing')}>Marcar como Em Processamento</MenuItem>
               <MenuItem onClick={() => handleStatusChange('completed')}>Marcar como Concluído</MenuItem>
               <MenuItem onClick={() => handleStatusChange('cancelled')}>Marcar como Cancelado</MenuItem>

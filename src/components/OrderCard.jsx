@@ -6,6 +6,8 @@ import { formatPrice } from '../utils/format';
 const getStatusLabel = (status) => {
   const labels = {
     pending: 'Pendente',
+    awaiting_payment: 'Aguardando Pagamento',
+    payment_confirmed: 'Pagamento Confirmado',
     processing: 'Em Processamento',
     completed: 'Concluído',
     cancelled: 'Cancelado'
@@ -16,7 +18,9 @@ const getStatusLabel = (status) => {
 const getStatusColor = (status) => {
   const colors = {
     pending: 'warning',
-    processing: 'info',
+    awaiting_payment: 'info',
+    payment_confirmed: 'info',
+    processing: 'primary',
     completed: 'success',
     cancelled: 'error'
   };
