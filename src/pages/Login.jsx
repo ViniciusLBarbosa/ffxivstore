@@ -45,7 +45,9 @@ export function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
-      navigate('/');
+      const redirectUrl = sessionStorage.getItem('redirectUrl');
+      sessionStorage.removeItem('redirectUrl');
+      navigate(redirectUrl || '/');
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {

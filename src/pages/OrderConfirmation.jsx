@@ -92,9 +92,29 @@ export function OrderConfirmation() {
             Obrigado por sua compra! Seu pedido foi recebido e está sendo processado.
           </Typography>
           
-          <Typography variant="body1" paragraph>
-            Em breve entraremos em contato através do Discord ({order.discord}) com as instruções para pagamento.
-          </Typography>
+          <Box sx={{ 
+            bgcolor: 'background.paper', 
+            p: 3, 
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 3
+          }}>
+            <Typography variant="h6" gutterBottom color="primary">
+              Informações de Contato
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Entraremos em contato através de:
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography variant="body1">
+                • Discord: <strong>{order.discordId}</strong>
+              </Typography>
+              <Typography variant="body1">
+                • Email: <strong>{order.userEmail}</strong>
+              </Typography>
+            </Box>
+          </Box>
 
           <Typography variant="body1" color="text.secondary" paragraph>
             Valor total: {order.currency === 'USD' 

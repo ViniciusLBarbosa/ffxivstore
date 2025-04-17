@@ -137,6 +137,8 @@ export function ProductDetail() {
 
   const handlePurchase = () => {
     if (!user) {
+      // Salva a URL atual antes de redirecionar
+      sessionStorage.setItem('redirectUrl', window.location.pathname);
       navigate('/login');
       return;
     }

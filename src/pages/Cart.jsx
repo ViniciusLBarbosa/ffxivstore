@@ -71,6 +71,8 @@ export function Cart() {
 
   const handleCheckout = () => {
     if (!user) {
+      // Salva a URL atual antes de redirecionar
+      sessionStorage.setItem('redirectUrl', window.location.pathname);
       navigate('/login');
       return;
     }
@@ -290,12 +292,11 @@ export function Cart() {
         }}>
           <Box>
             <Button
-              component={Link}
-              to="/checkout"
               variant="contained"
               color="primary"
               fullWidth
               size="large"
+              onClick={handleCheckout}
               disabled={cartItems.length === 0}
             >
               Finalizar Compra
