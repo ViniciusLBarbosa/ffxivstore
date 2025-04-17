@@ -94,11 +94,7 @@ export function CartProvider({ children }) {
 
     // Para produtos de Gil, verifica se a quantidade está disponível
     if (product.category === 'gil') {
-      console.log('Adicionando produto Gil ao carrinho:', {
-        gilAmount: product.gilAmount,
-        availableGil: product.availableGil,
-        soldGil: product.soldGil
-      });
+      
 
       const existingGilItems = cartItems.filter(item => 
         item.id === product.id
@@ -236,14 +232,10 @@ export function CartProvider({ children }) {
       // Atualiza o estoque de Gil para cada item do tipo gil no carrinho
       const gilItems = cartItems.filter(item => item.category === 'gil');
       
-      console.log('Itens Gil no carrinho antes da finalização:', gilItems);
+    
       
       for (const item of gilItems) {
-        console.log('Processando item Gil:', {
-          id: item.id,
-          gilAmount: item.gilAmount,
-          totalGil: item.totalGil
-        });
+       
 
         if (!item.gilAmount) {
           console.error('Item gil sem quantidade definida:', item);

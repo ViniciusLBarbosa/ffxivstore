@@ -231,10 +231,7 @@ export function ProductDetail() {
         return;
       }
 
-      console.log('Preparando produto Gil para adicionar ao carrinho:', {
-        selectedAmount: selectedGilAmount,
-        availableGil: availableGil
-      });
+      
 
       const gilPrice = Number(selectedGilAmount) * Number(product.pricePerMillion);
       const gilPriceUSD = Number(selectedGilAmount) * Number(product.pricePerMillionUSD);
@@ -249,7 +246,7 @@ export function ProductDetail() {
         soldGil: product.soldGil || 0
       };
 
-      console.log('Produto Gil preparado:', productToAdd);
+      
     } else {
       productToAdd = {
         ...productToAdd,
@@ -560,17 +557,20 @@ export function ProductDetail() {
       {/* Seção de descrição */}
       <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
         <Box sx={{ 
-          bgcolor: '#fff', 
+          bgcolor: 'background.paper',
           p: 3,
           borderRadius: 1,
-          boxShadow: 1
+          boxShadow: 1,
+          border: '1px solid',
+          borderColor: 'divider'
         }}>
-          <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h6" gutterBottom color="primary.main" sx={{ fontWeight: 'bold' }}>
             DESCRIÇÃO
           </Typography>
           <Typography 
             variant="body1" 
             component="pre"
+            color="text.primary"
             sx={{ 
               whiteSpace: 'pre-wrap',
               fontFamily: 'inherit',

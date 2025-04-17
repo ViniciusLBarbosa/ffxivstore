@@ -38,7 +38,7 @@ import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { ImageUpload } from '../components/ImageUpload';
 import { formatPrice } from '../utils/format';
-import { KeyboardArrowDown, KeyboardArrowUp, MoreVert, Refresh, Visibility, Star, StarBorder } from '@mui/icons-material';
+import { KeyboardArrowDown, KeyboardArrowUp, MoreVert, Refresh, Visibility, Star, StarBorder, Edit, Delete } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { InputAdornment, FormControl, InputLabel, ListItemText, Checkbox } from '@mui/material';
 
@@ -101,7 +101,13 @@ const OrderCard = ({ order, onStatusChange }) => {
   }
 
   return (
-    <Card sx={{ mb: 2 }}>
+    <Card sx={{ 
+      mb: 2,
+      bgcolor: 'background.paper',
+      borderRadius: 2,
+      border: '1px solid',
+      borderColor: 'divider'
+    }}>
       <CardContent>
         {/* Informações Básicas */}
         <Box sx={{ 
@@ -138,6 +144,7 @@ const OrderCard = ({ order, onStatusChange }) => {
             <IconButton
               size="small"
               onClick={handleMenuClick}
+              sx={{ color: 'text.primary' }}
             >
               <MoreVert />
             </IconButton>
@@ -145,6 +152,14 @@ const OrderCard = ({ order, onStatusChange }) => {
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
+              PaperProps={{
+                sx: {
+                  bgcolor: 'background.paper',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }
+              }}
             >
               <MenuItem onClick={() => handleStatusChange('pending')}>Marcar como Pendente</MenuItem>
               <MenuItem onClick={() => handleStatusChange('processing')}>Marcar como Em Processamento</MenuItem>
@@ -154,6 +169,7 @@ const OrderCard = ({ order, onStatusChange }) => {
             <IconButton 
               onClick={() => setExpanded(!expanded)}
               size="small"
+              sx={{ color: 'text.primary' }}
             >
               {expanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
@@ -166,7 +182,12 @@ const OrderCard = ({ order, onStatusChange }) => {
             display: 'flex', 
             alignItems: 'center', 
             gap: 2,
-            mt: 2
+            mt: 2,
+            p: 2,
+            bgcolor: 'background.default',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider'
           }}>
             <Box
               component="img"
@@ -180,7 +201,7 @@ const OrderCard = ({ order, onStatusChange }) => {
               }}
             />
             <Box>
-              <Typography variant="body1">
+              <Typography variant="body1" color="text.primary">
                 {order.items[0].name}
                 {order.items.length > 1 && ` + ${order.items.length - 1} ${order.items.length - 1 === 1 ? 'item' : 'itens'}`}
               </Typography>
@@ -217,7 +238,7 @@ const OrderCard = ({ order, onStatusChange }) => {
 
         {/* Detalhes Expandidos */}
         <Collapse in={expanded}>
-          <Box sx={{ mt: 3, borderTop: '1px solid #eee', pt: 2 }}>
+          <Box sx={{ mt: 3, borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
             {/* Itens do Pedido */}
             <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 'bold', mb: 2 }}>
               Itens do Pedido
@@ -231,8 +252,10 @@ const OrderCard = ({ order, onStatusChange }) => {
                   gap: 2,
                   mb: 2,
                   p: 2,
-                  bgcolor: 'grey.50',
-                  borderRadius: 1
+                  bgcolor: 'background.default',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider'
                 }}
               >
                 <Box
@@ -247,7 +270,7 @@ const OrderCard = ({ order, onStatusChange }) => {
                   }}
                 />
                 <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1">{item.name || 'Produto sem nome'}</Typography>
+                  <Typography variant="subtitle1" color="text.primary">{item.name || 'Produto sem nome'}</Typography>
                   {item.category === 'leveling' && (
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" color="text.secondary">
@@ -267,7 +290,7 @@ const OrderCard = ({ order, onStatusChange }) => {
                     Quantidade: {item.quantity || 1}
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                    <Typography variant="body2" color="primary">
+                    <Typography variant="body2" color="primary.main">
                       {formatPrice(item.priceBRL || 0)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -293,17 +316,17 @@ const OrderCard = ({ order, onStatusChange }) => {
                   </Typography>
                   {order.address ? (
                     <>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.primary">
                         {order.address.street || ''}{order.address.number ? `, ${order.address.number}` : ''}
                         {order.address.complement ? ` - ${order.address.complement}` : ''}
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.primary">
                         {order.address.neighborhood || ''}
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.primary">
                         {order.address.city || ''}{order.address.state ? ` - ${order.address.state}` : ''}
                       </Typography>
-                      <Typography variant="body2">
+                      <Typography variant="body2" color="text.primary">
                         CEP: {order.address.zipCode || 'Não informado'}
                       </Typography>
                     </>
@@ -320,13 +343,13 @@ const OrderCard = ({ order, onStatusChange }) => {
                   <Typography variant="subtitle2" color="primary.main" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Informações de Contato e Pagamento
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" color="text.primary">
                     Email: {order.userEmail || 'Não informado'}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" color="text.primary">
                     Discord: {order.discordUsername || order.discordId || 'Não informado'}
                   </Typography>
-                  <Typography variant="body2">
+                  <Typography variant="body2" color="text.primary">
                     Forma de Pagamento: {getPaymentMethodLabel(order.paymentMethod)}
                   </Typography>
                 </Box>
@@ -739,6 +762,7 @@ export function Admin() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const { user } = useAuth();
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -811,8 +835,9 @@ export function Admin() {
     }
   };
 
-  useEffect(() => {
-    const fetchProducts = async () => {
+  const fetchProducts = async () => {
+    try {
+      setIsLoadingProducts(true);
       const productsCollection = collection(db, 'products');
       const productsSnapshot = await getDocs(productsCollection);
       const productsList = productsSnapshot.docs.map(doc => ({
@@ -820,8 +845,16 @@ export function Admin() {
         ...doc.data()
       }));
       setProducts(productsList);
-    };
+      setSuccess('Produtos atualizados com sucesso!');
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError('Erro ao carregar produtos.');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProducts();
     fetchOrders();
   }, []);
@@ -991,10 +1024,10 @@ export function Admin() {
           : product
       ));
       
-      setSuccess(`Produto ${!currentInStock ? 'disponível' : 'indisponível'} em estoque`);
+      toast.success(`Produto ${!currentInStock ? 'disponível' : 'indisponível'} em estoque`);
     } catch (error) {
       console.error('Error updating stock status:', error);
-      setError('Erro ao atualizar status do estoque. Tente novamente.');
+      toast.error('Erro ao atualizar status do estoque');
     }
   };
 
@@ -1024,7 +1057,7 @@ export function Admin() {
 
   const handleOpenDetails = (order) => {
     // Implemente a lógica para abrir os detalhes do pedido
-    console.log('Detalhes do pedido:', order);
+   
   };
 
   const handleEditProduct = (product) => {
@@ -1096,12 +1129,23 @@ export function Admin() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+      <Typography variant="h4" component="h1" gutterBottom color="text.primary">
         Painel Administrativo
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTab-root': {
+              color: 'text.secondary',
+              '&.Mui-selected': {
+                color: 'primary.main',
+              },
+            },
+          }}
+        >
           <Tab label="Cadastrar Produto" />
           <Tab label="Produtos Cadastrados" />
           <Tab label="Pedidos" />
@@ -1109,24 +1153,27 @@ export function Admin() {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
+        <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>
       )}
 
-      {/* Aba de Cadastro de Produtos */}
+      {/* Aba de Cadastro de Produto */}
       {tabValue === 0 && (
-        <Card>
+        <Card sx={{ 
+          p: 3,
+          bgcolor: 'background.paper',
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider'
+        }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Adicionar Novo Produto
+            <Typography variant="h6" gutterBottom color="text.primary">
+              Novo Produto
             </Typography>
+
             <Box component="form" onSubmit={handleAddProduct}>
               <TextField
                 fullWidth
@@ -1136,39 +1183,46 @@ export function Admin() {
                 onChange={handleInputChange}
                 margin="normal"
                 required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '& fieldset': {
+                      borderColor: 'divider',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main',
+                    },
+                  },
+                }}
               />
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Preço em Reais"
-                    name="priceBRL"
-                    value={`R$ ${newProduct.priceBRL}`}
-                    onChange={handleInputChange}
-                    margin="normal"
-                    required
-                    placeholder="R$ 0,00"
-                    inputProps={{
-                      inputMode: 'numeric'
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Preço em Dólar"
-                    name="priceUSD"
-                    value={`$ ${newProduct.priceUSD}`}
-                    onChange={handleInputChange}
-                    margin="normal"
-                    required
-                    placeholder="$ 0.00"
-                    inputProps={{
-                      inputMode: 'numeric'
-                    }}
-                  />
-                </Grid>
-              </Grid>
+              
+              <TextField
+                fullWidth
+                label="Preço em Reais"
+                name="priceBRL"
+                value={`R$ ${newProduct.priceBRL}`}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                placeholder="R$ 0,00"
+                inputProps={{
+                  inputMode: 'numeric'
+                }}
+              />
+              
+              <TextField
+                fullWidth
+                label="Preço em Dólar"
+                name="priceUSD"
+                value={`$ ${newProduct.priceUSD}`}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                placeholder="$ 0.00"
+                inputProps={{
+                  inputMode: 'numeric'
+                }}
+              />
+              
               <TextField
                 fullWidth
                 label="Descrição"
@@ -1439,14 +1493,21 @@ export function Admin() {
               />
 
               <Box sx={{ my: 2 }}>
-                <Typography variant="subtitle1" gutterBottom>
+                <Typography variant="subtitle1" gutterBottom color="text.primary">
                   Imagem do Produto
                 </Typography>
-                <ImageUpload 
-                  onImageUpload={handleImageUpload} 
-                  disableCrop={false}
-                  aspectRatio={16/9}
-                />
+                <Paper sx={{ 
+                  p: 2, 
+                  bgcolor: 'background.default',
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}>
+                  <ImageUpload 
+                    onImageUpload={handleImageUpload} 
+                    disableCrop={false}
+                    aspectRatio={16/9}
+                  />
+                </Paper>
               </Box>
 
               <Button
@@ -1467,141 +1528,107 @@ export function Admin() {
       {tabValue === 1 && (
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
-              Produtos Cadastrados ({products.length})
+            <Typography variant="h6" color="text.primary">
+              Produtos Cadastrados
             </Typography>
             <Button
               variant="outlined"
-              startIcon={<Refresh />}
-              onClick={() => {
-                const fetchProducts = async () => {
-                  const productsCollection = collection(db, 'products');
-                  const productsSnapshot = await getDocs(productsCollection);
-                  const productsList = productsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                  }));
-                  setProducts(productsList);
-                  setSuccess('Produtos atualizados com sucesso!');
-                };
-                fetchProducts();
-              }}
+              startIcon={isLoadingProducts ? <CircularProgress size={16} /> : <Refresh />}
+              onClick={fetchProducts}
+              disabled={isLoadingProducts}
             >
               Atualizar Lista
             </Button>
           </Box>
-          
-          <Grid container spacing={2}>
-            {products.map((product) => (
-              <Grid item xs={12} key={product.id}>
-                <Card sx={{ 
-                  bgcolor: product.inStock ? 'background.paper' : '#f5f5f5',
-                  transition: 'all 0.2s ease'
-                }}>
-                  <CardContent>
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} sm={2}>
-                        <Box
-                          component="img"
-                          src={product.image}
-                          alt={product.name}
-                          sx={{
-                            width: '100%',
-                            height: 100,
-                            objectFit: 'cover',
-                            borderRadius: 1
-                          }}
+
+          {products.map((product) => (
+            <Card key={product.id} sx={{ mb: 2 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    component="img"
+                    src={product.image}
+                    alt={product.name}
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      objectFit: 'cover',
+                      borderRadius: 1
+                    }}
+                  />
+                  
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                      {product.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                      <Chip 
+                        size="small" 
+                        label={product.category === 'savage' ? 'Savage Clear' :
+                               product.category === 'leveling' ? 'Leveling' :
+                               product.category === 'quests' ? 'Quests' :
+                               product.category === 'extreme' ? 'Extreme Clear' :
+                               product.category === 'ultimate' ? 'Ultimate Clear' :
+                               product.category === 'gil' ? 'Gil' : ''}
+                        color={product.category === 'ultimate' ? 'error' :
+                              product.category === 'savage' ? 'warning' :
+                              product.category === 'extreme' ? 'info' : 'default'}
+                      />
+                      <Chip
+                        size="small"
+                        label={product.inStock ? 'Em Estoque' : 'Fora de Estoque'}
+                        color={product.inStock ? 'success' : 'default'}
+                        onClick={() => handleToggleStock(product.id, product.inStock)}
+                        sx={{ cursor: 'pointer' }}
+                      />
+                      {product.featured && (
+                        <Chip
+                          size="small"
+                          label="Destaque"
+                          color="primary"
                         />
-                      </Grid>
-                      <Grid item xs={12} sm={4}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                          {product.name}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                          <Chip 
-                            size="small" 
-                            label={product.category === 'savage' ? 'Savage Clear' :
-                                   product.category === 'leveling' ? 'Leveling' :
-                                   product.category === 'quests' ? 'Quests' :
-                                   product.category === 'extreme' ? 'Extreme Clear' :
-                                   product.category === 'ultimate' ? 'Ultimate Clear' :
-                                   product.category === 'gil' ? 'Gil' : ''}
-                            color={product.category === 'ultimate' ? 'error' :
-                                  product.category === 'savage' ? 'warning' :
-                                  product.category === 'extreme' ? 'info' : 'default'}
-                          />
-                          <Chip
-                            size="small"
-                            label={product.inStock ? 'Em Estoque' : 'Fora de Estoque'}
-                            color={product.inStock ? 'success' : 'default'}
-                          />
-                          {product.featured && (
-                            <Chip
-                              size="small"
-                              label="Destaque"
-                              color="primary"
-                            />
-                          )}
-                        </Box>
-                        {product.category === 'gil' && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            Gil Disponível: {(product.availableGil - (product.soldGil || 0)).toLocaleString()} milhões
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                          <Typography variant="body1" color="primary" sx={{ fontWeight: 'bold' }}>
-                            {formatPrice(product.priceBRL)}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            ${Number(product.priceUSD).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                      <Grid item xs={12} sm={3}>
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleEditProduct(product)}
-                          >
-                            Editar
-                          </Button>
-                          <Button
-                            size="small"
-                            variant={product.featured ? "contained" : "outlined"}
-                            color="primary"
-                            onClick={() => handleToggleFeatured(product.id, product.featured)}
-                            startIcon={product.featured ? <Star /> : <StarBorder />}
-                          >
-                            {product.featured ? 'Destacado' : 'Destacar'}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant={product.inStock ? "outlined" : "contained"}
-                            color={product.inStock ? "error" : "primary"}
-                            onClick={() => handleToggleStock(product.id, product.inStock)}
-                          >
-                            {product.inStock ? 'Remover do Estoque' : 'Adicionar ao Estoque'}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            Remover
-                          </Button>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+                      )}
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box>
+                      <Typography variant="body1" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                        {formatPrice(product.priceBRL)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        ${Number(product.priceUSD).toFixed(2)}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleToggleFeatured(product.id, product.featured)}
+                        color="primary"
+                        size="small"
+                      >
+                        {product.featured ? <Star /> : <StarBorder />}
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleEditProduct(product)}
+                        color="primary"
+                        size="small"
+                      >
+                        <Edit />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDeleteProduct(product.id)}
+                        color="error"
+                        size="small"
+                      >
+                        <Delete />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
         </Box>
       )}
 
@@ -1609,7 +1636,7 @@ export function Admin() {
       {tabValue === 2 && (
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
+            <Typography variant="h6" color="text.primary">
               Gerenciar Pedidos ({orders.length})
             </Typography>
             <Button

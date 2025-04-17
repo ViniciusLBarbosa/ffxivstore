@@ -89,7 +89,16 @@ const OrderCard = ({ order }) => {
   };
 
   return (
-    <Paper sx={{ p: 3, width: '100%' }}>
+    <Paper 
+      sx={{ 
+        p: 3, 
+        width: '100%',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider'
+      }}
+    >
       {/* Informações Básicas */}
       <Box sx={{ 
         display: 'flex', 
@@ -125,6 +134,7 @@ const OrderCard = ({ order }) => {
           <IconButton 
             onClick={() => setExpanded(!expanded)}
             size="small"
+            sx={{ color: 'text.primary' }}
           >
             {expanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
           </IconButton>
@@ -137,7 +147,12 @@ const OrderCard = ({ order }) => {
           display: 'flex', 
           alignItems: 'center', 
           gap: 2,
-          mt: 2
+          mt: 2,
+          p: 2,
+          bgcolor: 'background.paper',
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'divider'
         }}>
           <Box
             component="img"
@@ -151,8 +166,8 @@ const OrderCard = ({ order }) => {
             }}
           />
           <Box>
-            <Typography variant="body1">
-              {safeOrder.items[0].name || 'Produto'}
+            <Typography variant="body1" color="text.primary">
+              {safeOrder.items[0].name}
               {safeOrder.items.length > 1 && ` + ${safeOrder.items.length - 1} ${safeOrder.items.length - 1 === 1 ? 'item' : 'itens'}`}
             </Typography>
             {safeOrder.items[0].category === 'leveling' && (
@@ -174,7 +189,7 @@ const OrderCard = ({ order }) => {
 
       {/* Detalhes Expandidos */}
       <Collapse in={expanded}>
-        <Box sx={{ mt: 3, borderTop: '1px solid #eee', pt: 2 }}>
+        <Box sx={{ mt: 3, borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
           {/* Itens do Pedido */}
           <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 'bold', mb: 2 }}>
             Itens do Pedido
@@ -188,8 +203,10 @@ const OrderCard = ({ order }) => {
                 gap: 2,
                 mb: 2,
                 p: 2,
-                bgcolor: 'grey.50',
-                borderRadius: 1
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider'
               }}
             >
               <Box
@@ -204,7 +221,7 @@ const OrderCard = ({ order }) => {
                 }}
               />
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle1">{item.name || 'Produto'}</Typography>
+                <Typography variant="subtitle1" color="text.primary">{item.name || 'Produto'}</Typography>
                 {item.category === 'leveling' && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="body2" color="text.secondary">
@@ -229,7 +246,7 @@ const OrderCard = ({ order }) => {
                   Quantidade: {item.quantity}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
-                  <Typography variant="body2" color="primary">
+                  <Typography variant="body2" color="primary.main">
                     {formatPrice(item.price || 0)}
                   </Typography>
                 </Box>
@@ -250,17 +267,17 @@ const OrderCard = ({ order }) => {
                 <Typography variant="subtitle2" color="primary.main" gutterBottom sx={{ fontWeight: 'bold' }}>
                   Endereço de Entrega
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   {safeOrder.address.street || 'Não informado'}, {safeOrder.address.number || 'S/N'}
                   {safeOrder.address.complement && ` - ${safeOrder.address.complement}`}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   {safeOrder.address.neighborhood || 'Não informado'}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   {safeOrder.address.city || 'Não informado'} - {safeOrder.address.state || 'N/A'}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   CEP: {safeOrder.address.zipCode || 'Não informado'}
                 </Typography>
               </Box>
@@ -271,13 +288,13 @@ const OrderCard = ({ order }) => {
                 <Typography variant="subtitle2" color="primary.main" gutterBottom sx={{ fontWeight: 'bold' }}>
                   Informações de Contato e Pagamento
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   Discord: {safeOrder.discord}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   Forma de Pagamento: {getPaymentMethodLabel(safeOrder.paymentMethod)}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" color="text.primary">
                   Moeda: {safeOrder.currency === 'USD' ? 'Dólar (USD)' : 'Real (BRL)'}
                 </Typography>
               </Box>

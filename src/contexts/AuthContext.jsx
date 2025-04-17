@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
             name: userData.name
           };
           
-          console.log('Final User Object:', updatedUser);
+          
           setUser(updatedUser);
         } catch (error) {
           console.error('Erro ao buscar dados do usuário:', error);

@@ -22,6 +22,7 @@ import { formatPrice } from '../utils/format';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { TermsDialog } from '../components/TermsDialog';
+import { useTheme } from '../contexts/ThemeContext';
 
 export function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
@@ -31,6 +32,7 @@ export function Cart() {
   const [loading, setLoading] = useState(true);
   const [removedItems, setRemovedItems] = useState([]);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     const checkStockStatus = async () => {
@@ -191,7 +193,7 @@ export function Cart() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: 1,
-                  bgcolor: 'grey.100',
+                  bgcolor: isDarkMode ? 'background.paper' : 'grey.100',
                   borderRadius: 1,
                   p: 1,
                   mb: 2
@@ -201,19 +203,22 @@ export function Cart() {
                       size="small" 
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       disabled={item.quantity <= 1}
+                      sx={{ color: 'text.primary' }}
                     >
                       <RemoveIcon />
                     </IconButton>
                     <Typography sx={{ 
                       minWidth: '40px', 
                       textAlign: 'center',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      color: 'text.primary'
                     }}>
                       {item.quantity}
                     </Typography>
                     <IconButton 
                       size="small" 
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      sx={{ color: 'text.primary' }}
                     >
                       <AddIcon />
                     </IconButton>
