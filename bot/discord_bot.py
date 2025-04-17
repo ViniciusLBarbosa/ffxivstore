@@ -31,8 +31,9 @@ APPROVE_EMOJI = "✅"
 REJECT_EMOJI = "❌"
 
 # Cache para armazenar informações dos pedidos
-order_messages = {}  # Mapeia message_id -> (order_data, user)
-payment_messages = {}  # Mapeia message_id -> (order_data, user, admin_message)
+order_messages = {}  # Mapeia message_id -> (order_data, user) - Para aprovação inicial do pedido
+payment_confirmation_messages = {}  # Mapeia message_id -> (order_data, user, admin_message) - Para confirmação de pagamento
+payment_verification_messages = {}  # Mapeia message_id -> (order_data, user, original_message) - Para verificação do pagamento pelos admins
 
 # Armazena o momento em que o bot iniciou
 bot_start_time = None
@@ -407,12 +408,17 @@ async def on_raw_reaction_add(payload):
     if payload.user_id == bot.user.id:
         return
 
-    # Verifica se é uma mensagem de pedido dos admins
+    # Verifica se é uma mensagem de aprovação inicial do pedido
     if payload.message_id in order_messages:
         await handle_admin_reaction(payload)
-    # Verifica se é uma mensagem de pagamento dos clientes
-    elif payload.message_id in payment_messages:
-        await handle_payment_reaction(payload)
+    # Verifica se é uma mensagem de confirmação de pagamento do cliente
+    elif payload.message_id in payment_confirmation_messages:
+        order, user, admin_message = payment_confirmation_messages[payload.message_id]
+        if payload.user_id == user.id:
+            await handle_payment_reaction(payload)
+    # Verifica se é uma mensagem de verificação de pagamento dos admins
+    elif payload.message_id in payment_verification_messages:
+        await handle_payment_verification(payload)
 
 async def handle_admin_reaction(payload):
     """Manipula reações dos administradores nos pedidos"""
@@ -441,10 +447,10 @@ async def handle_admin_reaction(payload):
 
 async def handle_payment_reaction(payload):
     """Manipula reações dos clientes nas mensagens de pagamento"""
-    if payload.message_id not in payment_messages:
+    if payload.message_id not in payment_confirmation_messages:
         return
 
-    order, user, admin_message = payment_messages[payload.message_id]
+    order, user, admin_message = payment_confirmation_messages[payload.message_id]
     
     # Verifica se quem reagiu é o cliente
     if payload.user_id != user.id:
@@ -501,13 +507,80 @@ async def notify_payment_confirmation(order, user):
             if admin_role:
                 mention_text = admin_role.mention
 
-        await admin_channel.send(
+        # Envia a mensagem e adiciona as reações
+        message = await admin_channel.send(
             content=mention_text,
             embed=confirm_embed
         )
+        
+        # Adiciona as reações de confirmação
+        await message.add_reaction(APPROVE_EMOJI)  # ✅
+        await message.add_reaction(REJECT_EMOJI)   # ❌
+        
+        # Armazena a mensagem no cache para verificação de pagamento
+        payment_verification_messages[message.id] = (order, user, message)
+
+        print(f"Notificação de pagamento enviada para administradores")
 
     except Exception as e:
         print(f"Erro ao notificar confirmação de pagamento: {e}")
+
+async def handle_payment_verification(payload):
+    """Manipula reações dos administradores na confirmação de pagamento"""
+    if payload.message_id not in payment_verification_messages:
+        return
+
+    order, user, message = payment_verification_messages[payload.message_id]
+    
+    # Busca o membro que reagiu
+    guild = bot.get_guild(payload.guild_id)
+    if not guild:
+        return
+    
+    admin = guild.get_member(payload.user_id)
+    if not admin or not discord.utils.get(admin.roles, id=DISCORD_ADMIN_ROLE_ID):
+        return
+
+    # Processa a reação
+    if str(payload.emoji) == APPROVE_EMOJI:
+        # Admin confirmou o pagamento
+        await update_order_status(order['id'], 'processing')
+        
+        # Notifica o cliente
+        confirm_embed = discord.Embed(
+            title="✅ Pagamento Verificado!",
+            description="Seu pagamento foi confirmado por nossa equipe! O pedido está em processamento.",
+            color=discord.Color.green()
+        )
+        await user.send(embed=confirm_embed)
+        
+        # Notifica os admins
+        admin_embed = discord.Embed(
+            title="✅ Pagamento Verificado",
+            description=f"O pagamento do pedido #{order['id'][-6:]} foi confirmado por {admin.name}",
+            color=discord.Color.green()
+        )
+        await message.reply(embed=admin_embed)
+
+    elif str(payload.emoji) == REJECT_EMOJI:
+        # Admin rejeitou o pagamento
+        await update_order_status(order['id'], 'awaiting_payment')
+        
+        # Notifica o cliente
+        reject_embed = discord.Embed(
+            title="❌ Pagamento Não Confirmado",
+            description="Nossa equipe não conseguiu confirmar seu pagamento. Por favor, verifique se o pagamento foi realizado corretamente e entre em contato conosco se precisar de ajuda.",
+            color=discord.Color.red()
+        )
+        await user.send(embed=reject_embed)
+        
+        # Notifica os admins
+        admin_embed = discord.Embed(
+            title="❌ Pagamento Rejeitado",
+            description=f"O pagamento do pedido #{order['id'][-6:]} foi rejeitado por {admin.name}",
+            color=discord.Color.red()
+        )
+        await message.reply(embed=admin_embed)
 
 async def handle_payment_cancellation(order, user):
     """Manipula o cancelamento de pagamento solicitado pelo cliente"""
@@ -692,8 +765,8 @@ async def send_payment_instructions(user, order, admin_message=None):
         await payment_message.add_reaction(APPROVE_EMOJI)
         await payment_message.add_reaction(REJECT_EMOJI)
 
-        # Armazena a mensagem no cache
-        payment_messages[payment_message.id] = (order, user, admin_message)
+        # Armazena a mensagem no cache de confirmação de pagamento
+        payment_confirmation_messages[payment_message.id] = (order, user, admin_message)
 
         print(f"Instruções de pagamento enviadas para {user.name}")
 

@@ -22,6 +22,8 @@ import { formatPrice } from '../utils/format';
 const getStatusColor = (status) => {
   const statusColors = {
     'pending': 'warning',
+    'awaiting_payment': 'info',
+    'payment_confirmed': 'info',
     'processing': 'info',
     'completed': 'success',
     'cancelled': 'error'
@@ -32,6 +34,8 @@ const getStatusColor = (status) => {
 const getStatusLabel = (status) => {
   const statusLabels = {
     'pending': 'Pendente',
+    'awaiting_payment': 'Aguardando Pagamento',
+    'payment_confirmed': 'Pagamento Confirmado',
     'processing': 'Em Processamento',
     'completed': 'Concluído',
     'cancelled': 'Cancelado'
