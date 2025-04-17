@@ -194,8 +194,13 @@ const OrderCard = ({ order, onStatusChange }) => {
                   </Typography>
                 </Box>
               )}
+              {order.items[0].category === 'gil' && (
+                <Typography variant="body2" color="text.secondary">
+                  Quantidade de Gil: {order.items[0].gilAmount} milhões ({(order.items[0].totalGil || 0).toLocaleString()} Gil)
+                </Typography>
+              )}
               <Typography variant="body2" color="text.secondary">
-                Discord: {order.discord || 'Não informado'}
+                Discord: {order.discordUsername || order.discordId || 'Não informado'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Email: {order.userEmail || 'Não informado'}
@@ -252,6 +257,11 @@ const OrderCard = ({ order, onStatusChange }) => {
                         Job: {item.job || 'Não especificado'}
                       </Typography>
                     </Box>
+                  )}
+                  {item.category === 'gil' && (
+                    <Typography variant="body2" color="text.secondary">
+                      Quantidade de Gil: {item.gilAmount} milhões ({(item.totalGil || 0).toLocaleString()} Gil)
+                    </Typography>
                   )}
                   <Typography variant="body2" color="text.secondary">
                     Quantidade: {item.quantity || 1}
@@ -314,7 +324,7 @@ const OrderCard = ({ order, onStatusChange }) => {
                     Email: {order.userEmail || 'Não informado'}
                   </Typography>
                   <Typography variant="body2">
-                    Discord: {order.discord || 'Não informado'}
+                    Discord: {order.discordUsername || order.discordId || 'Não informado'}
                   </Typography>
                   <Typography variant="body2">
                     Forma de Pagamento: {getPaymentMethodLabel(order.paymentMethod)}
@@ -338,13 +348,17 @@ const EditProductDialog = ({ open, onClose, product }) => {
     priceUSD: '',
     category: '',
     inStock: true,
-    // Campos específicos para produtos de leveling
     basePrice: '',
     basePriceUSD: '',
     levelMultiplier: '',
     levelMultiplierUSD: '',
     availableJobs: [],
-    maxLevel: 100
+    maxLevel: 100,
+    // Campos para produtos do tipo Gil
+    pricePerMillion: '',
+    pricePerMillionUSD: '',
+    availableGil: '',
+    soldGil: 0
   });
 
   useEffect(() => {
@@ -357,13 +371,17 @@ const EditProductDialog = ({ open, onClose, product }) => {
         priceUSD: product.priceUSD || '',
         category: product.category || '',
         inStock: product.inStock ?? true,
-        // Campos específicos para produtos de leveling
         basePrice: product.basePrice || '',
         basePriceUSD: product.basePriceUSD || '',
         levelMultiplier: product.levelMultiplier || '',
         levelMultiplierUSD: product.levelMultiplierUSD || '',
         availableJobs: product.availableJobs || [],
-        maxLevel: product.maxLevel || 100
+        maxLevel: product.maxLevel || 100,
+        // Campos para produtos do tipo Gil
+        pricePerMillion: product.pricePerMillion || '',
+        pricePerMillionUSD: product.pricePerMillionUSD || '',
+        availableGil: product.availableGil || '',
+        soldGil: product.soldGil || 0
       });
     }
   }, [product]);
@@ -470,6 +488,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                   <MenuItem value="mount">Mount</MenuItem>
                   <MenuItem value="leveling">Leveling</MenuItem>
                   <MenuItem value="clear">Clear</MenuItem>
+                  <MenuItem value="gil">Gil</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -603,6 +622,93 @@ const EditProductDialog = ({ open, onClose, product }) => {
               </>
             )}
 
+            {formData.category === 'gil' && (
+              <>
+                <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                  Configuração de Gil
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Preço por Milhão (R$)"
+                      name="pricePerMillion"
+                      value={formData.pricePerMillion}
+                      onChange={handleEditFormInputChange}
+                      margin="normal"
+                      required
+                      type="number"
+                      inputProps={{
+                        min: 0,
+                        step: 0.01
+                      }}
+                      helperText="Preço em Reais por milhão de Gil"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Preço por Milhão ($)"
+                      name="pricePerMillionUSD"
+                      value={formData.pricePerMillionUSD}
+                      onChange={handleEditFormInputChange}
+                      margin="normal"
+                      required
+                      type="number"
+                      inputProps={{
+                        min: 0,
+                        step: 0.01
+                      }}
+                      helperText="Preço em Dólar por milhão de Gil"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Adicionar Gil (em milhões)"
+                      name="gilToAdd"
+                      type="number"
+                      inputProps={{
+                        min: 1,
+                        step: 1
+                      }}
+                      onChange={(e) => {
+                        const value = Math.max(0, Number(e.target.value));
+                        setFormData(prev => ({
+                          ...prev,
+                          availableGil: Number(product.availableGil || 0) + value
+                        }));
+                      }}
+                      helperText="Quantidade de Gil a ser adicionada ao estoque"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Gil Vendido (em milhões)"
+                      value={product.soldGil || 0}
+                      disabled
+                      margin="normal"
+                      helperText="Quantidade de Gil já vendida"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Gil Total após adição: {Number(formData.availableGil).toLocaleString()} milhões
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Gil Disponível após adição: {(Number(formData.availableGil) - (product.soldGil || 0)).toLocaleString()} milhões
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </>
+            )}
+
             <Grid item xs={12}>
               <FormControlLabel
                 control={
@@ -649,7 +755,12 @@ export function Admin() {
     levelMultiplier: '',
     levelMultiplierUSD: '',
     availableJobs: [],
-    maxLevel: 100
+    maxLevel: 100,
+    // Campos para produtos do tipo Gil
+    pricePerMillion: '',
+    pricePerMillionUSD: '',
+    availableGil: '',
+    soldGil: 0
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -677,7 +788,7 @@ export function Admin() {
             id: orderDoc.id,
             ...data,
             userEmail: userData.email || data.userEmail || 'Não informado',
-            createdAt: data.createdAt?.toDate()
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
           };
         } catch (error) {
           console.error('Erro ao buscar dados do usuário:', error);
@@ -685,7 +796,7 @@ export function Admin() {
             id: orderDoc.id,
             ...data,
             userEmail: data.userEmail || 'Não informado',
-            createdAt: data.createdAt?.toDate()
+            createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date()
           };
         }
       }));
@@ -798,6 +909,14 @@ export function Admin() {
         createdAt: new Date().toISOString()
       };
 
+      // Adiciona campos específicos para produtos de Gil
+      if (newProduct.category === 'gil') {
+        productToSave.availableGil = Number(newProduct.availableGil);
+        productToSave.soldGil = 0;
+        productToSave.pricePerMillion = Number(newProduct.pricePerMillion);
+        productToSave.pricePerMillionUSD = Number(newProduct.pricePerMillionUSD);
+      }
+
       const docRef = await addDoc(collection(db, 'products'), productToSave);
       setProducts(prev => [...prev, { id: docRef.id, ...productToSave }]);
       setNewProduct({
@@ -815,7 +934,11 @@ export function Admin() {
         levelMultiplier: '',
         levelMultiplierUSD: '',
         availableJobs: [],
-        maxLevel: 100
+        maxLevel: 100,
+        pricePerMillion: '',
+        pricePerMillionUSD: '',
+        availableGil: '',
+        soldGil: 0
       });
       setSuccess('Produto adicionado com sucesso!');
     } catch (error) {
@@ -979,7 +1102,8 @@ export function Admin() {
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="Produtos" />
+          <Tab label="Cadastrar Produto" />
+          <Tab label="Produtos Cadastrados" />
           <Tab label="Pedidos" />
         </Tabs>
       </Box>
@@ -996,281 +1120,400 @@ export function Admin() {
         </Alert>
       )}
 
+      {/* Aba de Cadastro de Produtos */}
       {tabValue === 0 && (
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Adicionar Novo Produto
-                </Typography>
-                <Box component="form" onSubmit={handleAddProduct}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Adicionar Novo Produto
+            </Typography>
+            <Box component="form" onSubmit={handleAddProduct}>
+              <TextField
+                fullWidth
+                label="Nome do Produto"
+                name="name"
+                value={newProduct.name}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+              />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    label="Nome do Produto"
-                    name="name"
-                    value={newProduct.name}
+                    label="Preço em Reais"
+                    name="priceBRL"
+                    value={`R$ ${newProduct.priceBRL}`}
                     onChange={handleInputChange}
                     margin="normal"
                     required
+                    placeholder="R$ 0,00"
+                    inputProps={{
+                      inputMode: 'numeric'
+                    }}
                   />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Preço em Dólar"
+                    name="priceUSD"
+                    value={`$ ${newProduct.priceUSD}`}
+                    onChange={handleInputChange}
+                    margin="normal"
+                    required
+                    placeholder="$ 0.00"
+                    inputProps={{
+                      inputMode: 'numeric'
+                    }}
+                  />
+                </Grid>
+              </Grid>
+              <TextField
+                fullWidth
+                label="Descrição"
+                name="description"
+                value={newProduct.description}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                multiline
+                rows={4}
+              />
+              
+              <TextField
+                select
+                fullWidth
+                label="Categoria"
+                name="category"
+                value={newProduct.category}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+              >
+                <MenuItem value="savage">Savage Clear</MenuItem>
+                <MenuItem value="leveling">Leveling</MenuItem>
+                <MenuItem value="quests">Quests</MenuItem>
+                <MenuItem value="extreme">Extreme Clear</MenuItem>
+                <MenuItem value="ultimate">Ultimate Clear</MenuItem>
+                <MenuItem value="gil">Gil</MenuItem>
+              </TextField>
+              
+              {newProduct.category === 'leveling' && (
+                <>
+                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                    Configuração de Preços em Reais (R$)
+                  </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço em Reais"
-                        name="priceBRL"
-                        value={`R$ ${newProduct.priceBRL}`}
+                        label="Preço Base (R$)"
+                        name="basePrice"
+                        value={newProduct.basePrice}
                         onChange={handleInputChange}
                         margin="normal"
                         required
-                        placeholder="R$ 0,00"
+                        type="number"
                         inputProps={{
-                          inputMode: 'numeric'
+                          min: 0,
+                          step: 0.01
                         }}
+                        helperText="Preço inicial em Reais"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço em Dólar"
-                        name="priceUSD"
-                        value={`$ ${newProduct.priceUSD}`}
+                        label="Multiplicador por Level (R$)"
+                        name="levelMultiplier"
+                        value={newProduct.levelMultiplier}
                         onChange={handleInputChange}
                         margin="normal"
                         required
-                        placeholder="$ 0.00"
+                        type="number"
                         inputProps={{
-                          inputMode: 'numeric'
+                          min: 0,
+                          step: 0.01
                         }}
+                        helperText="Valor adicional por level em Reais"
                       />
                     </Grid>
                   </Grid>
-                  <TextField
-                    fullWidth
-                    label="Descrição"
-                    name="description"
-                    value={newProduct.description}
-                    onChange={handleInputChange}
-                    margin="normal"
-                    required
-                    multiline
-                    rows={4}
-                  />
-                  
-                  <TextField
-                    select
-                    fullWidth
-                    label="Categoria"
-                    name="category"
-                    value={newProduct.category}
-                    onChange={handleInputChange}
-                    margin="normal"
-                    required
-                  >
-                    <MenuItem value="savage">Savage Clear</MenuItem>
-                    <MenuItem value="leveling">Leveling</MenuItem>
-                    <MenuItem value="quests">Quests</MenuItem>
-                    <MenuItem value="extreme">Extreme Clear</MenuItem>
-                    <MenuItem value="ultimate">Ultimate Clear</MenuItem>
-                  </TextField>
-                  
-                  {newProduct.category === 'leveling' && (
-                    <>
-                      <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                        Configuração de Preços em Reais (R$)
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Preço Base (R$)"
-                            name="basePrice"
-                            value={newProduct.basePrice}
-                            onChange={handleInputChange}
-                            margin="normal"
-                            required
-                            type="number"
-                            inputProps={{
-                              min: 0,
-                              step: 0.01
-                            }}
-                            helperText="Preço inicial em Reais"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Multiplicador por Level (R$)"
-                            name="levelMultiplier"
-                            value={newProduct.levelMultiplier}
-                            onChange={handleInputChange}
-                            margin="normal"
-                            required
-                            type="number"
-                            inputProps={{
-                              min: 0,
-                              step: 0.01
-                            }}
-                            helperText="Valor adicional por level em Reais"
-                          />
-                        </Grid>
-                      </Grid>
 
-                      <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-                        Configuração de Preços em Dólar ($)
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Preço Base ($)"
-                            name="basePriceUSD"
-                            value={newProduct.basePriceUSD}
-                            onChange={handleInputChange}
-                            margin="normal"
-                            required
-                            type="number"
-                            inputProps={{
-                              min: 0,
-                              step: 0.01
-                            }}
-                            helperText="Preço inicial em Dólar"
-                          />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            fullWidth
-                            label="Multiplicador por Level ($)"
-                            name="levelMultiplierUSD"
-                            value={newProduct.levelMultiplierUSD}
-                            onChange={handleInputChange}
-                            margin="normal"
-                            required
-                            type="number"
-                            inputProps={{
-                              min: 0,
-                              step: 0.01
-                            }}
-                            helperText="Valor adicional por level em Dólar"
-                          />
-                        </Grid>
-                      </Grid>
-
-                      <Grid container spacing={2} sx={{ mt: 1 }}>
-                        <Grid item xs={12}>
-                          <TextField
-                            fullWidth
-                            label="Nível Máximo"
-                            name="maxLevel"
-                            value={newProduct.maxLevel}
-                            onChange={handleInputChange}
-                            type="number"
-                            required
-                            inputProps={{
-                              min: 1,
-                              max: 100,
-                              step: 1
-                            }}
-                            helperText="Nível máximo que o cliente poderá selecionar"
-                          />
-                        </Grid>
-                      </Grid>
-
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Jobs Disponíveis
-                        </Typography>
-                        <Grid container spacing={1}>
-                          {[
-                            'Paladin', 'Warrior', 'Dark Knight', 'Gunbreaker', // Tanks
-                            'White Mage', 'Scholar', 'Astrologian', 'Sage', // Healers
-                            'Monk', 'Dragoon', 'Ninja', 'Samurai', 'Reaper', // Melee DPS
-                            'Bard', 'Machinist', 'Dancer', // Ranged DPS
-                            'Black Mage', 'Summoner', 'Red Mage', // Magic DPS
-                            'Carpenter', 'Blacksmith', 'Armorer', 'Goldsmith', 'Leatherworker', 'Weaver', 'Alchemist', 'Culinarian', // Crafters
-                            'Miner', 'Botanist', 'Fisher', // Gatherers
-                            'Blue Mage' //fodase
-                          ].map((job) => (
-                            <Grid item key={job}>
-                              <Chip
-                                label={job}
-                                onClick={() => {
-                                  const jobs = newProduct.availableJobs || [];
-                                  const newJobs = jobs.includes(job)
-                                    ? jobs.filter(j => j !== job)
-                                    : [...jobs, job];
-                                  setNewProduct(prev => ({
-                                    ...prev,
-                                    availableJobs: newJobs
-                                  }));
-                                }}
-                                color={newProduct.availableJobs?.includes(job) ? "primary" : "default"}
-                                sx={{ m: 0.5 }}
-                              />
-                            </Grid>
-                          ))}
-                        </Grid>
-                      </Box>
-                    </>
-                  )}
-
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={newProduct.featured}
+                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
+                    Configuração de Preços em Dólar ($)
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Preço Base ($)"
+                        name="basePriceUSD"
+                        value={newProduct.basePriceUSD}
                         onChange={handleInputChange}
-                        name="featured"
+                        margin="normal"
+                        required
+                        type="number"
+                        inputProps={{
+                          min: 0,
+                          step: 0.01
+                        }}
+                        helperText="Preço inicial em Dólar"
                       />
-                    }
-                    label="Produto em Destaque"
-                    sx={{ mt: 2 }}
-                  />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Multiplicador por Level ($)"
+                        name="levelMultiplierUSD"
+                        value={newProduct.levelMultiplierUSD}
+                        onChange={handleInputChange}
+                        margin="normal"
+                        required
+                        type="number"
+                        inputProps={{
+                          min: 0,
+                          step: 0.01
+                        }}
+                        helperText="Valor adicional por level em Dólar"
+                      />
+                    </Grid>
+                  </Grid>
 
-                  <Box sx={{ my: 2 }}>
+                  <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Nível Máximo"
+                        name="maxLevel"
+                        value={newProduct.maxLevel}
+                        onChange={handleInputChange}
+                        type="number"
+                        required
+                        inputProps={{
+                          min: 1,
+                          max: 100,
+                          step: 1
+                        }}
+                        helperText="Nível máximo que o cliente poderá selecionar"
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle1" gutterBottom>
-                      Imagem do Produto
+                      Jobs Disponíveis
                     </Typography>
-                    <ImageUpload 
-                      onImageUpload={handleImageUpload} 
-                      disableCrop={false}
-                      aspectRatio={16/9}
-                    />
+                    <Grid container spacing={1}>
+                      {[
+                        'Paladin', 'Warrior', 'Dark Knight', 'Gunbreaker', // Tanks
+                        'White Mage', 'Scholar', 'Astrologian', 'Sage', // Healers
+                        'Monk', 'Dragoon', 'Ninja', 'Samurai', 'Reaper', // Melee DPS
+                        'Bard', 'Machinist', 'Dancer', // Ranged DPS
+                        'Black Mage', 'Summoner', 'Red Mage', // Magic DPS
+                        'Carpenter', 'Blacksmith', 'Armorer', 'Goldsmith', 'Leatherworker', 'Weaver', 'Alchemist', 'Culinarian', // Crafters
+                        'Miner', 'Botanist', 'Fisher', // Gatherers
+                        'Blue Mage' //fodase
+                      ].map((job) => (
+                        <Grid item key={job}>
+                          <Chip
+                            label={job}
+                            onClick={() => {
+                              const jobs = newProduct.availableJobs || [];
+                              const newJobs = jobs.includes(job)
+                                ? jobs.filter(j => j !== job)
+                                : [...jobs, job];
+                              setNewProduct(prev => ({
+                                ...prev,
+                                availableJobs: newJobs
+                              }));
+                            }}
+                            color={newProduct.availableJobs?.includes(job) ? "primary" : "default"}
+                            sx={{ m: 0.5 }}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
                   </Box>
+                </>
+              )}
 
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                  >
-                    Adicionar Produto
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Produtos Cadastrados
+              {newProduct.category === 'gil' && (
+                <>
+                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                    Configuração de Preços por Milhão de Gil
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Preço por Milhão (R$)"
+                        name="pricePerMillion"
+                        value={newProduct.pricePerMillion}
+                        onChange={handleInputChange}
+                        margin="normal"
+                        required
+                        type="number"
+                        inputProps={{
+                          min: 0,
+                          step: 0.01
+                        }}
+                        helperText="Preço em Reais por milhão de Gil"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Preço por Milhão ($)"
+                        name="pricePerMillionUSD"
+                        value={newProduct.pricePerMillionUSD}
+                        onChange={handleInputChange}
+                        margin="normal"
+                        required
+                        type="number"
+                        inputProps={{
+                          min: 0,
+                          step: 0.01
+                        }}
+                        helperText="Preço em Dólar por milhão de Gil"
+                      />
+                    </Grid>
+                  </Grid>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Adicionar Gil (em milhões)"
+                        name="gilToAdd"
+                        type="number"
+                        inputProps={{
+                          min: 1,
+                          step: 1
+                        }}
+                        onChange={(e) => {
+                          const value = Math.max(0, Number(e.target.value));
+                          setNewProduct(prev => ({
+                            ...prev,
+                            availableGil: Number(newProduct.availableGil || 0) + value
+                          }));
+                        }}
+                        helperText="Quantidade de Gil a ser adicionada ao estoque"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Gil Vendido (em milhões)"
+                        value={newProduct.soldGil || 0}
+                        disabled
+                        margin="normal"
+                        helperText="Quantidade de Gil já vendida"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Gil Total após adição: {Number(newProduct.availableGil).toLocaleString()} milhões
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Gil Disponível após adição: {(Number(newProduct.availableGil) - (newProduct.soldGil || 0)).toLocaleString()} milhões
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </>
+              )}
+
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newProduct.featured}
+                    onChange={handleInputChange}
+                    name="featured"
+                  />
+                }
+                label="Produto em Destaque"
+                sx={{ mt: 2 }}
+              />
+
+              <Box sx={{ my: 2 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Imagem do Produto
                 </Typography>
-                {products.map((product) => (
-                  <Box
-                    key={product.id}
-                    sx={{
-                      mb: 2,
-                      p: 2,
-                      border: '1px solid #ddd',
-                      borderRadius: 1,
-                      bgcolor: product.inStock ? 'background.paper' : '#f5f5f5',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
+                <ImageUpload 
+                  onImageUpload={handleImageUpload} 
+                  disableCrop={false}
+                  aspectRatio={16/9}
+                />
+              </Box>
+
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Adicionar Produto
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Aba de Produtos Cadastrados */}
+      {tabValue === 1 && (
+        <Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h6">
+              Produtos Cadastrados ({products.length})
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<Refresh />}
+              onClick={() => {
+                const fetchProducts = async () => {
+                  const productsCollection = collection(db, 'products');
+                  const productsSnapshot = await getDocs(productsCollection);
+                  const productsList = productsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                  }));
+                  setProducts(productsList);
+                  setSuccess('Produtos atualizados com sucesso!');
+                };
+                fetchProducts();
+              }}
+            >
+              Atualizar Lista
+            </Button>
+          </Box>
+          
+          <Grid container spacing={2}>
+            {products.map((product) => (
+              <Grid item xs={12} key={product.id}>
+                <Card sx={{ 
+                  bgcolor: product.inStock ? 'background.paper' : '#f5f5f5',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <CardContent>
                     <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} sm={6}>
+                      <Grid item xs={12} sm={2}>
+                        <Box
+                          component="img"
+                          src={product.image}
+                          alt={product.name}
+                          sx={{
+                            width: '100%',
+                            height: 100,
+                            objectFit: 'cover',
+                            borderRadius: 1
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
                           {product.name}
                         </Typography>
@@ -1281,7 +1524,8 @@ export function Admin() {
                                    product.category === 'leveling' ? 'Leveling' :
                                    product.category === 'quests' ? 'Quests' :
                                    product.category === 'extreme' ? 'Extreme Clear' :
-                                   product.category === 'ultimate' ? 'Ultimate Clear' : ''}
+                                   product.category === 'ultimate' ? 'Ultimate Clear' :
+                                   product.category === 'gil' ? 'Gil' : ''}
                             color={product.category === 'ultimate' ? 'error' :
                                   product.category === 'savage' ? 'warning' :
                                   product.category === 'extreme' ? 'info' : 'default'}
@@ -1299,6 +1543,11 @@ export function Admin() {
                             />
                           )}
                         </Box>
+                        {product.category === 'gil' && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Gil Disponível: {(product.availableGil - (product.soldGil || 0)).toLocaleString()} milhões
+                          </Typography>
+                        )}
                       </Grid>
                       <Grid item xs={12} sm={3}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -1348,15 +1597,16 @@ export function Admin() {
                         </Box>
                       </Grid>
                     </Grid>
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
-        </Grid>
+        </Box>
       )}
 
-      {tabValue === 1 && (
+      {/* Aba de Pedidos */}
+      {tabValue === 2 && (
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6">
@@ -1379,8 +1629,8 @@ export function Admin() {
           ) : (
             <Box>
               {orders.map((order) => (
-                <OrderCard 
-                  key={order.id} 
+                <OrderCard
+                  key={order.id}
                   order={order}
                   onStatusChange={handleUpdateOrderStatus}
                 />

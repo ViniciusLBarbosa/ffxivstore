@@ -58,6 +58,36 @@ const formatOrderPrice = (price, currency) => {
 const OrderCard = ({ order }) => {
   const [expanded, setExpanded] = useState(false);
 
+  // Verificações de segurança para garantir que o objeto order tem todas as propriedades necessárias
+  if (!order || typeof order !== 'object') {
+    return (
+      <Paper sx={{ p: 3, width: '100%' }}>
+        <Alert severity="error">Dados do pedido inválidos</Alert>
+      </Paper>
+    );
+  }
+
+  // Garantir que todas as propriedades necessárias existam com valores padrão
+  const safeOrder = {
+    id: order.id || 'unknown',
+    createdAt: order.createdAt instanceof Date ? order.createdAt : new Date(),
+    total: order.total || 0,
+    currency: order.currency || 'BRL',
+    status: order.status || 'pending',
+    paymentMethod: order.paymentMethod || 'pix',
+    items: Array.isArray(order.items) ? order.items : [],
+    address: order.address || {
+      street: 'Não informado',
+      number: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    },
+    discord: order.discord || 'Não informado'
+  };
+
   return (
     <Paper sx={{ p: 3, width: '100%' }}>
       {/* Informações Básicas */}
@@ -70,10 +100,10 @@ const OrderCard = ({ order }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box>
             <Typography variant="h6" sx={{ color: 'primary.main' }}>
-              Pedido #{order.id.slice(-6)}
+              Pedido #{safeOrder.id.slice(-6)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {order.createdAt?.toLocaleDateString('pt-BR', {
+              {safeOrder.createdAt.toLocaleDateString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -86,11 +116,11 @@ const OrderCard = ({ order }) => {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
-            {formatOrderPrice(order.total, order.currency)}
+            {formatOrderPrice(safeOrder.total, safeOrder.currency)}
           </Typography>
           <Chip
-            label={getStatusLabel(order.status)}
-            color={getStatusColor(order.status)}
+            label={getStatusLabel(safeOrder.status)}
+            color={getStatusColor(safeOrder.status)}
           />
           <IconButton 
             onClick={() => setExpanded(!expanded)}
@@ -102,7 +132,7 @@ const OrderCard = ({ order }) => {
       </Box>
 
       {/* Preview do primeiro item */}
-      {!expanded && order.items[0] && (
+      {!expanded && safeOrder.items[0] && (
         <Box sx={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -111,8 +141,8 @@ const OrderCard = ({ order }) => {
         }}>
           <Box
             component="img"
-            src={order.items[0].image}
-            alt={order.items[0].name}
+            src={safeOrder.items[0].image || ''}
+            alt={safeOrder.items[0].name || 'Produto'}
             sx={{
               width: 60,
               height: 60,
@@ -122,21 +152,21 @@ const OrderCard = ({ order }) => {
           />
           <Box>
             <Typography variant="body1">
-              {order.items[0].name}
-              {order.items.length > 1 && ` + ${order.items.length - 1} ${order.items.length - 1 === 1 ? 'item' : 'itens'}`}
+              {safeOrder.items[0].name || 'Produto'}
+              {safeOrder.items.length > 1 && ` + ${safeOrder.items.length - 1} ${safeOrder.items.length - 1 === 1 ? 'item' : 'itens'}`}
             </Typography>
-            {order.items[0].category === 'leveling' && (
+            {safeOrder.items[0].category === 'leveling' && (
               <Box sx={{ mt: 0.5 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Level: {order.items[0].startLevel || '?'} - {order.items[0].endLevel || '?'}
+                  Level: {safeOrder.items[0].startLevel || '?'} - {safeOrder.items[0].endLevel || '?'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Job: {order.items[0].job || 'Não especificado'}
+                  Job: {safeOrder.items[0].job || 'Não especificado'}
                 </Typography>
               </Box>
             )}
             <Typography variant="body2" color="text.secondary">
-              Forma de Pagamento: {getPaymentMethodLabel(order.paymentMethod)}
+              Forma de Pagamento: {getPaymentMethodLabel(safeOrder.paymentMethod)}
             </Typography>
           </Box>
         </Box>
@@ -149,7 +179,7 @@ const OrderCard = ({ order }) => {
           <Typography variant="subtitle2" color="primary.main" sx={{ fontWeight: 'bold', mb: 2 }}>
             Itens do Pedido
           </Typography>
-          {order.items.map((item) => (
+          {safeOrder.items.map((item) => (
             <Box
               key={item.category === 'leveling' ? `${item.id}-${item.job}` : item.id}
               sx={{
@@ -164,8 +194,8 @@ const OrderCard = ({ order }) => {
             >
               <Box
                 component="img"
-                src={item.image}
-                alt={item.name}
+                src={item.image || ''}
+                alt={item.name || 'Produto'}
                 sx={{
                   width: 80,
                   height: 80,
@@ -174,7 +204,7 @@ const OrderCard = ({ order }) => {
                 }}
               />
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="subtitle1">{item.name}</Typography>
+                <Typography variant="subtitle1">{item.name || 'Produto'}</Typography>
                 {item.category === 'leveling' && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="body2" color="text.secondary">
@@ -185,22 +215,29 @@ const OrderCard = ({ order }) => {
                     </Typography>
                   </Box>
                 )}
+                {item.category === 'gil' && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Quantidade: {item.gilAmount || 0} milhões de Gil
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total: {(item.totalGil || 0).toLocaleString()} Gil
+                    </Typography>
+                  </Box>
+                )}
                 <Typography variant="body2" color="text.secondary">
                   Quantidade: {item.quantity}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
                   <Typography variant="body2" color="primary">
-                    {formatPrice(item.priceBRL)}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    ${Number(item.priceUSD).toFixed(2)}
+                    {formatPrice(item.price || 0)}
                   </Typography>
                 </Box>
               </Box>
               <Typography variant="subtitle1" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                {order.currency === 'USD' 
-                  ? `$${(Number(item.priceUSD) * item.quantity).toFixed(2)}`
-                  : formatPrice(Number(item.priceBRL) * item.quantity)
+                {safeOrder.currency === 'USD' 
+                  ? `$${((Number(item.price) || 0) * (item.quantity || 1)).toFixed(2)}`
+                  : formatPrice((Number(item.price) || 0) * (item.quantity || 1))
                 }
               </Typography>
             </Box>
@@ -214,17 +251,17 @@ const OrderCard = ({ order }) => {
                   Endereço de Entrega
                 </Typography>
                 <Typography variant="body2">
-                  {order.address.street}, {order.address.number}
-                  {order.address.complement && ` - ${order.address.complement}`}
+                  {safeOrder.address.street || 'Não informado'}, {safeOrder.address.number || 'S/N'}
+                  {safeOrder.address.complement && ` - ${safeOrder.address.complement}`}
                 </Typography>
                 <Typography variant="body2">
-                  {order.address.neighborhood}
+                  {safeOrder.address.neighborhood || 'Não informado'}
                 </Typography>
                 <Typography variant="body2">
-                  {order.address.city} - {order.address.state}
+                  {safeOrder.address.city || 'Não informado'} - {safeOrder.address.state || 'N/A'}
                 </Typography>
                 <Typography variant="body2">
-                  CEP: {order.address.zipCode}
+                  CEP: {safeOrder.address.zipCode || 'Não informado'}
                 </Typography>
               </Box>
             </Grid>
@@ -235,13 +272,13 @@ const OrderCard = ({ order }) => {
                   Informações de Contato e Pagamento
                 </Typography>
                 <Typography variant="body2">
-                  Discord: {order.discord}
+                  Discord: {safeOrder.discord}
                 </Typography>
                 <Typography variant="body2">
-                  Forma de Pagamento: {getPaymentMethodLabel(order.paymentMethod)}
+                  Forma de Pagamento: {getPaymentMethodLabel(safeOrder.paymentMethod)}
                 </Typography>
                 <Typography variant="body2">
-                  Moeda: {order.currency === 'USD' ? 'Dólar (USD)' : 'Real (BRL)'}
+                  Moeda: {safeOrder.currency === 'USD' ? 'Dólar (USD)' : 'Real (BRL)'}
                 </Typography>
               </Box>
             </Grid>
@@ -261,7 +298,10 @@ export function Orders() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       
       try {
         if (id) {
@@ -269,11 +309,17 @@ export function Orders() {
           const orderDoc = await getDoc(doc(db, 'orders', id));
           if (orderDoc.exists()) {
             const data = orderDoc.data();
-            setOrders([{
+            const orderData = {
               id: orderDoc.id,
               ...data,
-              createdAt: data.createdAt?.toDate()
-            }]);
+              createdAt: data.createdAt?.toDate() || new Date(),
+              items: data.items || [],
+              total: data.total || 0,
+              currency: data.currency || 'BRL',
+              status: data.status || 'pending',
+              paymentMethod: data.paymentMethod || 'pix'
+            };
+            setOrders([orderData]);
           } else {
             setError('Pedido não encontrado');
           }
@@ -290,10 +336,15 @@ export function Orders() {
             return {
               id: doc.id,
               ...data,
-              createdAt: data.createdAt?.toDate()
+              createdAt: data.createdAt?.toDate() || new Date(),
+              items: data.items || [],
+              total: data.total || 0,
+              currency: data.currency || 'BRL',
+              status: data.status || 'pending',
+              paymentMethod: data.paymentMethod || 'pix'
             };
           })
-          .sort((a, b) => b.createdAt - a.createdAt);
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
           setOrders(ordersList);
         }

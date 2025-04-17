@@ -11,7 +11,8 @@ const categories = [
   { value: 'ultimate', label: 'Ultimate Clear', color: 'error' },
   { value: 'extreme', label: 'Extreme Clear', color: 'info' },
   { value: 'leveling', label: 'Leveling', color: 'success' },
-  { value: 'quests', label: 'Quests', color: 'default' }
+  { value: 'quests', label: 'Quests', color: 'default' },
+  { value: 'gil', label: 'Gil', color: 'warning' }
 ];
 
 export function Products() {

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { formatPrice } from '../utils/format';
 import { useAuth } from './AuthContext';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const CartContext = createContext({});
@@ -92,9 +92,42 @@ export function CartProvider({ children }) {
       }
     }
 
+    // Para produtos de Gil, verifica se a quantidade está disponível
+    if (product.category === 'gil') {
+      console.log('Adicionando produto Gil ao carrinho:', {
+        gilAmount: product.gilAmount,
+        availableGil: product.availableGil,
+        soldGil: product.soldGil
+      });
+
+      const existingGilItems = cartItems.filter(item => 
+        item.id === product.id
+      );
+
+      const totalGilRequested = existingGilItems.reduce((total, item) => 
+        total + (item.gilAmount || 0), 0
+      ) + (product.gilAmount || 0);
+
+      if (totalGilRequested > (product.availableGil - (product.soldGil || 0))) {
+        return {
+          success: false,
+          message: 'Quantidade de Gil solicitada não está disponível'
+        };
+      }
+    }
+
     setCartItems(prev => {
+      // Para produtos de Gil ou Leveling, sempre adiciona como novo item
+      if (['leveling', 'gil'].includes(product.category)) {
+        return [...prev, { ...product, quantity: 1 }];
+      }
+      
       // Para outros tipos de produtos, mantém a lógica original
-      const existingItem = prev.find(item => item.id === product.id && !item.category === 'leveling');
+      const existingItem = prev.find(item => 
+        item.id === product.id && 
+        !['leveling', 'gil'].includes(item.category)
+      );
+      
       if (existingItem) {
         return prev.map(item =>
           item.id === product.id
@@ -151,6 +184,75 @@ export function CartProvider({ children }) {
     return formatPrice(total);
   };
 
+  const updateGilStock = async (productId, gilAmount) => {
+    try {
+      // Primeiro, verifica se o produto ainda tem gil suficiente
+      const productRef = doc(db, 'products', productId);
+      const productDoc = await getDoc(productRef);
+      
+      if (!productDoc.exists()) {
+        throw new Error('Produto não encontrado');
+      }
+
+      const productData = productDoc.data();
+      const currentSoldGil = Number(productData.soldGil || 0);
+      const availableGil = Number(productData.availableGil) - currentSoldGil;
+
+      if (Number(gilAmount) > availableGil) {
+        throw new Error('Quantidade de Gil solicitada não está mais disponível');
+      }
+
+      // Atualiza o estoque de Gil
+      const newSoldGil = currentSoldGil + Number(gilAmount);
+      await updateDoc(productRef, {
+        soldGil: newSoldGil
+      });
+
+      // Emite um evento customizado para notificar que o estoque foi atualizado
+      window.dispatchEvent(new CustomEvent('gilStockUpdated', {
+        detail: {
+          productId,
+          newSoldGil,
+          availableGil: productData.availableGil
+        }
+      }));
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar estoque de Gil:', error);
+      throw error;
+    }
+  };
+
+  const finalizePurchase = async () => {
+    try {
+      // Atualiza o estoque de Gil para cada item do tipo gil no carrinho
+      const gilItems = cartItems.filter(item => item.category === 'gil');
+      
+      console.log('Itens Gil no carrinho antes da finalização:', gilItems);
+      
+      for (const item of gilItems) {
+        console.log('Processando item Gil:', {
+          id: item.id,
+          gilAmount: item.gilAmount,
+          totalGil: item.totalGil
+        });
+
+        if (!item.gilAmount) {
+          console.error('Item gil sem quantidade definida:', item);
+          continue;
+        }
+        await updateGilStock(item.id, item.gilAmount);
+      }
+      
+      // Limpa o carrinho
+      await clearCart();
+    } catch (error) {
+      console.error('Erro ao finalizar compra:', error);
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return null;
   }
@@ -162,7 +264,8 @@ export function CartProvider({ children }) {
       removeFromCart,
       updateQuantity,
       clearCart,
-      getCartTotal
+      getCartTotal,
+      finalizePurchase
     }}>
       {children}
     </CartContext.Provider>

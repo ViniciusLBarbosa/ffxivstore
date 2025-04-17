@@ -31,7 +31,7 @@ const steps = ['Seu Endereço', 'Contato Discord', 'Forma de Pagamento', 'Revis�
 export function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cartItems, clearCart } = useCart();
+  const { cartItems, clearCart, finalizePurchase } = useCart();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -204,54 +204,72 @@ export function Checkout() {
       return;
     }
 
-    if (!formData.address.street || !formData.address.number || !formData.address.neighborhood || !formData.address.city || !formData.address.state || !formData.address.zipCode || !formData.discord || !formData.payment.method || !formData.payment.currency) {
+    if (!isStepValid()) {
       setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      // Prepara os itens do pedido
-      const orderItems = cartItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        image: item.image,
-        category: item.category,
-        priceBRL: item.priceBRL,
-        priceUSD: item.priceUSD,
-        quantity: item.quantity,
-        startLevel: item.startLevel,
-        endLevel: item.endLevel,
-        job: item.job
-      }));
+      const orderItems = cartItems.map(item => {
+        const baseItem = {
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity || 1,
+          price: formData.payment.currency === 'BRL' ? Number(item.priceBRL) : Number(item.priceUSD),
+          category: item.category,
+          image: item.image || ''
+        };
 
-      // Cria o pedido
+        // Adiciona campos específicos para produtos de leveling
+        if (item.category === 'leveling') {
+          return {
+            ...baseItem,
+            selectedJob: item.selectedJob || null,
+            startLevel: item.startLevel || null,
+            endLevel: item.endLevel || null
+          };
+        }
+        
+        // Adiciona campos específicos para produtos de gil
+        if (item.category === 'gil') {
+          return {
+            ...baseItem,
+            gilAmount: Number(item.gilAmount) || 0,
+            totalGil: Number(item.totalGil) || 0
+          };
+        }
+
+        return baseItem;
+      });
+
       const orderData = {
         userId: user.uid,
-        email: user.email,
+        userEmail: user.email,
         items: orderItems,
         total: calculateTotal(),
         currency: formData.payment.currency,
+        payment: {
+          method: formData.payment.method
+        },
+        discordId: formData.discord,
+        discordUsername: formData.discord,
         status: 'pending',
-        createdAt: new Date(),
-        address: formData.address,
-        discord: formData.discord,
-        paymentMethod: formData.payment.method
+        createdAt: serverTimestamp(),
+        address: formData.address || null
       };
 
-      // Adiciona o pedido ao Firestore
       const orderRef = await addDoc(collection(db, 'orders'), orderData);
-
-      // Limpa o carrinho
-      await clearCart();
-
-      // Redireciona para a página de confirmação
+      
+      // Atualiza o estoque de gil e limpa o carrinho
+      await finalizePurchase();
+      
       navigate(`/order-confirmation/${orderRef.id}`);
     } catch (error) {
-      console.error('Erro ao criar pedido:', error);
-      setError('Ocorreu um erro ao processar seu pedido. Por favor, tente novamente.');
+      console.error('Error creating order:', error);
+      setError('Ocorreu um erro ao criar o pedido. Por favor, tente novamente.');
     } finally {
       setLoading(false);
     }

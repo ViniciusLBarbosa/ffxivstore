@@ -15,7 +15,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  TextField
 } from '@mui/material';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -38,6 +39,8 @@ export function ProductDetail() {
   const [selectedJob, setSelectedJob] = useState('');
   const [currentPrice, setCurrentPrice] = useState(0);
   const [currentPriceUSD, setCurrentPriceUSD] = useState(0);
+  const [selectedGilAmount, setSelectedGilAmount] = useState(1);
+  const [availableGil, setAvailableGil] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -49,6 +52,12 @@ export function ProductDetail() {
           if (productData.category === 'leveling') {
             setSelectedLevel([1, productData.maxLevel || 90]);
             calculatePrices(productData, [1, productData.maxLevel || 90]);
+          } else if (productData.category === 'gil') {
+            setSelectedGilAmount(1);
+            calculateGilPrice(1);
+            // Calcula o gil disponível
+            const available = productData.availableGil - (productData.soldGil || 0);
+            setAvailableGil(available);
           } else {
             setCurrentPrice(Number(productData.priceBRL));
             setCurrentPriceUSD(Number(productData.priceUSD));
@@ -65,6 +74,27 @@ export function ProductDetail() {
     };
 
     fetchProduct();
+
+    // Adiciona listener para atualização de estoque de Gil
+    const handleGilStockUpdate = async (event) => {
+      const { productId, newSoldGil, availableGil } = event.detail;
+      if (productId === id) {
+        const available = Number(availableGil) - Number(newSoldGil);
+        setAvailableGil(available);
+        
+        // Ajusta a quantidade selecionada se necessário
+        if (selectedGilAmount > available) {
+          setSelectedGilAmount(available);
+          calculateGilPrice(available);
+        }
+      }
+    };
+
+    window.addEventListener('gilStockUpdated', handleGilStockUpdate);
+
+    return () => {
+      window.removeEventListener('gilStockUpdated', handleGilStockUpdate);
+    };
   }, [id, navigate]);
 
   useEffect(() => {
@@ -72,6 +102,12 @@ export function ProductDetail() {
       calculatePrices(product, selectedLevel);
     }
   }, [selectedLevel, product]);
+
+  useEffect(() => {
+    if (product?.category === 'gil') {
+      calculateGilPrice(selectedGilAmount);
+    }
+  }, [selectedGilAmount, product]);
 
   const calculatePrices = (product, [startLevel, endLevel]) => {
     if (!product || product.category !== 'leveling') return;
@@ -111,14 +147,44 @@ export function ProductDetail() {
       return;
     }
 
-    const productToAdd = {
+    let productToAdd = {
       ...product,
-      priceBRL: currentPrice.toFixed(2),
-      priceUSD: currentPriceUSD.toFixed(2),
-      startLevel: selectedLevel[0],
-      endLevel: selectedLevel[1],
-      job: selectedJob
+      quantity: 1
     };
+
+    if (product.category === 'leveling') {
+      productToAdd = {
+        ...productToAdd,
+        startLevel: selectedLevel[0],
+        endLevel: selectedLevel[1],
+        job: selectedJob,
+        priceBRL: currentPrice.toFixed(2),
+        priceUSD: currentPriceUSD.toFixed(2)
+      };
+    } else if (product.category === 'gil') {
+      if (!selectedGilAmount || selectedGilAmount < 1) {
+        setNotification('Por favor, selecione uma quantidade de Gil válida.');
+        return;
+      }
+      
+      if (selectedGilAmount > availableGil) {
+        setNotification('Quantidade de Gil selecionada não está disponível.');
+        return;
+      }
+
+      const gilPrice = Number(selectedGilAmount) * Number(product.pricePerMillion);
+      const gilPriceUSD = Number(selectedGilAmount) * Number(product.pricePerMillionUSD);
+
+      productToAdd = {
+        ...productToAdd,
+        gilAmount: Number(selectedGilAmount),
+        totalGil: Number(selectedGilAmount) * 1000000, // Convertendo milhões para Gil
+        priceBRL: gilPrice.toFixed(2),
+        priceUSD: gilPriceUSD.toFixed(2),
+        availableGil: product.availableGil,
+        soldGil: product.soldGil || 0
+      };
+    }
 
     const result = addToCart(productToAdd);
     if (result.success) {
@@ -141,14 +207,57 @@ export function ProductDetail() {
       return;
     }
 
-    const productToAdd = {
+    let productToAdd = {
       ...product,
-      priceBRL: currentPrice.toFixed(2),
-      priceUSD: currentPriceUSD.toFixed(2),
-      startLevel: selectedLevel[0],
-      endLevel: selectedLevel[1],
-      job: selectedJob
+      quantity: 1
     };
+
+    if (product.category === 'leveling') {
+      productToAdd = {
+        ...productToAdd,
+        startLevel: selectedLevel[0],
+        endLevel: selectedLevel[1],
+        job: selectedJob,
+        priceBRL: currentPrice.toFixed(2),
+        priceUSD: currentPriceUSD.toFixed(2)
+      };
+    } else if (product.category === 'gil') {
+      if (!selectedGilAmount || selectedGilAmount < 1) {
+        setNotification('Por favor, selecione uma quantidade de Gil válida.');
+        return;
+      }
+      
+      if (selectedGilAmount > availableGil) {
+        setNotification('Quantidade de Gil selecionada não está disponível.');
+        return;
+      }
+
+      console.log('Preparando produto Gil para adicionar ao carrinho:', {
+        selectedAmount: selectedGilAmount,
+        availableGil: availableGil
+      });
+
+      const gilPrice = Number(selectedGilAmount) * Number(product.pricePerMillion);
+      const gilPriceUSD = Number(selectedGilAmount) * Number(product.pricePerMillionUSD);
+
+      productToAdd = {
+        ...productToAdd,
+        gilAmount: Number(selectedGilAmount),
+        totalGil: Number(selectedGilAmount) * 1000000, // Convertendo milhões para Gil
+        priceBRL: gilPrice.toFixed(2),
+        priceUSD: gilPriceUSD.toFixed(2),
+        availableGil: product.availableGil,
+        soldGil: product.soldGil || 0
+      };
+
+      console.log('Produto Gil preparado:', productToAdd);
+    } else {
+      productToAdd = {
+        ...productToAdd,
+        priceBRL: Number(product.priceBRL).toFixed(2),
+        priceUSD: Number(product.priceUSD).toFixed(2)
+      };
+    }
 
     const result = addToCart(productToAdd);
     setNotification(result.message);
@@ -156,6 +265,21 @@ export function ProductDetail() {
     if (result.success) {
       setTimeout(() => setNotification(''), 3000);
     }
+  };
+
+  const calculateGilPrice = (amount) => {
+    if (!product || product.category !== 'gil') return;
+    
+    // Calcula o preço em Reais
+    const pricePerMillion = Number(product.pricePerMillion || 0);
+    const finalPriceBRL = amount * pricePerMillion;
+    
+    // Calcula o preço em Dólar
+    const pricePerMillionUSD = Number(product.pricePerMillionUSD || 0);
+    const finalPriceUSD = amount * pricePerMillionUSD;
+    
+    setCurrentPrice(finalPriceBRL);
+    setCurrentPriceUSD(finalPriceUSD);
   };
 
   if (loading) {
@@ -221,6 +345,54 @@ export function ProductDetail() {
                   <Typography variant="subtitle1" gutterBottom>
                     Selecione o Range de Level
                   </Typography>
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Nível In."
+                        type="number"
+                        value={selectedLevel[0]}
+                        onChange={(e) => {
+                          const newStartLevel = Math.max(1, Math.min(selectedLevel[1] - 1, Number(e.target.value)));
+                          setSelectedLevel([newStartLevel, selectedLevel[1]]);
+                        }}
+                        inputProps={{
+                          min: 1,
+                          max: selectedLevel[1] - 1,
+                          step: 1
+                        }}
+                        sx={{ 
+                          '& .MuiInputBase-input': { 
+                            fontSize: '1.1rem',
+                            padding: '12px 14px'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label="Nível Fi."
+                        type="number"
+                        value={selectedLevel[1]}
+                        onChange={(e) => {
+                          const newEndLevel = Math.min(product.maxLevel || 90, Math.max(selectedLevel[0] + 1, Number(e.target.value)));
+                          setSelectedLevel([selectedLevel[0], newEndLevel]);
+                        }}
+                        inputProps={{
+                          min: selectedLevel[0] + 1,
+                          max: product.maxLevel || 90,
+                          step: 1
+                        }}
+                        sx={{ 
+                          '& .MuiInputBase-input': { 
+                            fontSize: '1.1rem',
+                            padding: '12px 14px'
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
                   <Slider
                     value={selectedLevel}
                     onChange={handleLevelChange}
@@ -254,6 +426,60 @@ export function ProductDetail() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Job: {selectedJob || 'Não selecionado'}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+              
+              {product.category === 'gil' && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Selecione a Quantidade de Gil
+                  </Typography>
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Milhões de Gil"
+                        type="number"
+                        value={selectedGilAmount}
+                        onChange={(e) => {
+                          const value = Math.max(1, Math.min(availableGil, Number(e.target.value)));
+                          setSelectedGilAmount(value);
+                          calculateGilPrice(value);
+                        }}
+                        inputProps={{
+                          min: 1,
+                          max: availableGil,
+                          step: 1
+                        }}
+                        sx={{ 
+                          '& .MuiInputBase-input': { 
+                            fontSize: '1.1rem',
+                            padding: '12px 14px'
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                  <Slider
+                    value={selectedGilAmount}
+                    onChange={(_, value) => {
+                      setSelectedGilAmount(value);
+                      calculateGilPrice(value);
+                    }}
+                    valueLabelDisplay="auto"
+                    min={1}
+                    max={availableGil}
+                    sx={{ mb: 3 }}
+                  />
+
+                  <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(0, 0, 0, 0.03)', borderRadius: 1 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Quantidade: {selectedGilAmount} milhões de Gil
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Gil Disponível: {availableGil} milhões
                     </Typography>
                   </Box>
                 </Box>
