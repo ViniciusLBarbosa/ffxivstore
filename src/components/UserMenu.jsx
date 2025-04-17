@@ -51,10 +51,7 @@ export function UserMenu() {
   // Se não houver usuário logado, não renderiza nada
   if (!user) return null;
 
-  // Debug logs
-  console.log('UserMenu - User:', user);
-  console.log('UserMenu - Is Admin:', user.isAdmin);
-  console.log('UserMenu - Role:', user.role);
+
 
   return (
     <>

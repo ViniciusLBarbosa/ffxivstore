@@ -10,13 +10,10 @@ export function Navbar() {
 
   const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
   
-  // Debug log
-  console.log('Navbar - User:', user);
-  console.log('Navbar - Is Admin:', user?.isAdmin);
-  console.log('Navbar - Role:', user?.role);
+
 
   const showAdminButton = user && user.isAdmin === true;
-  console.log('Navbar - Should show admin button:', showAdminButton);
+
 
   return (
     <AppBar position="static">
