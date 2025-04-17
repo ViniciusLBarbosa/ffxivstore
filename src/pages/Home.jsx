@@ -20,7 +20,7 @@ export function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Busca os Serviços mais recentes
+        // Busca os produtos mais recentes
         const newProductsQuery = query(
           collection(db, 'products'),
           orderBy('createdAt', 'desc'),
@@ -33,7 +33,7 @@ export function Home() {
         }));
         setNewProducts(newProductsList);
 
-        // Busca os Serviços em destaque
+        // Busca os produtos em destaque
         const featuredProductsQuery = query(
           collection(db, 'products'),
           where('featured', '==', true),
@@ -159,7 +159,7 @@ export function Home() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
-        Serviços em Destaque
+        Produtos em Destaque
       </Typography>
 
       <Box sx={{ mb: 6 }}>
@@ -192,7 +192,7 @@ export function Home() {
       </Box>
 
       <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 4 }}>
-        Novos Serviços
+        Novos Produtos
       </Typography>
 
       <Box sx={{ mb: 6 }}>
