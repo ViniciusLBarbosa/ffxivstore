@@ -34,6 +34,7 @@ REJECT_EMOJI = "❌"
 order_messages = {}  # Mapeia message_id -> (order_data, user) - Para aprovação inicial do pedido
 payment_confirmation_messages = {}  # Mapeia message_id -> (order_data, user, admin_message) - Para confirmação de pagamento
 payment_verification_messages = {}  # Mapeia message_id -> (order_data, user, original_message) - Para verificação do pagamento pelos admins
+admin_orders = {}    # Mapeia order_id -> {admin, message, user, order} - Para gerenciamento do pedido
 
 # Armazena o momento em que o bot iniciou
 bot_start_time = None
@@ -403,50 +404,167 @@ async def on_close():
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    """Manipula reações adicionadas às mensagens"""
-    # Ignora reações do próprio bot
+    """Manipula reações adicionadas a mensagens"""
     if payload.user_id == bot.user.id:
         return
 
-    # Verifica se é uma mensagem de aprovação inicial do pedido
-    if payload.message_id in order_messages:
+    # Verifica se é uma reação em uma mensagem de pedido no canal de admins
+    if payload.channel_id == DISCORD_ADMIN_CHANNEL_ID and payload.message_id in order_messages:
         await handle_admin_reaction(payload)
-    # Verifica se é uma mensagem de confirmação de pagamento do cliente
-    elif payload.message_id in payment_confirmation_messages:
-        order, user, admin_message = payment_confirmation_messages[payload.message_id]
-        if payload.user_id == user.id:
-            await handle_payment_reaction(payload)
-    # Verifica se é uma mensagem de verificação de pagamento dos admins
-    elif payload.message_id in payment_verification_messages:
-        await handle_payment_verification(payload)
+        return
+
+    # Verifica se é uma reação em uma mensagem de DM de admin
+    for order_data in admin_orders.values():
+        if payload.message_id == order_data['message'].id:
+            await handle_payment_verification(payload)
+            return
+
+    # Verifica se é uma reação em uma mensagem de confirmação de pagamento do cliente
+    if payload.message_id in payment_confirmation_messages:
+        await handle_payment_confirmation(payload)
+        return
 
 async def handle_admin_reaction(payload):
-    """Manipula reações dos administradores nos pedidos"""
-    order, user = order_messages[payload.message_id]
-    
-    # Busca o membro que reagiu
-    guild = bot.get_guild(payload.guild_id)
-    if not guild:
-        return
-    
-    admin = guild.get_member(payload.user_id)
-    if not admin or not discord.utils.get(admin.roles, id=DISCORD_ADMIN_ROLE_ID):
-        return
+    """Manipula reações de admins em mensagens de pedidos"""
+    try:
+        # Obtém a mensagem original
+        channel = bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        
+        # Obtém o admin que reagiu
+        guild = bot.get_guild(payload.guild_id)
+        admin = await guild.fetch_member(payload.user_id)
+        
+        # Obtém o pedido associado à mensagem
+        order = order_messages[payload.message_id]
+        
+        # Verifica a reação
+        if str(payload.emoji) == '✅':  # Aprovação do pedido
+            # Verifica se o pedido já está sendo gerenciado por outro admin
+            if order['id'] in admin_orders:
+                await message.remove_reaction(payload.emoji, admin)
+                await admin.send(f"Este pedido já está sendo gerenciado por {admin_orders[order['id']]['admin'].name}")
+                return
+            
+            # Cria embed para DM do admin
+            embed = discord.Embed(
+                title=f"🎯 Pedido #{order['id']} - Aguardando Pagamento",
+                description="Você foi designado para gerenciar este pedido.",
+                color=discord.Color.blue()
+            )
+            
+            # Adiciona campos do pedido
+            embed.add_field(name="Cliente", value=f"Discord: {order['discordUsername']}\nEmail: {order['userEmail']}", inline=False)
+            embed.add_field(name="Items", value="\n".join([f"• {item['quantity']}x {item['name']}" for item in order['items']]), inline=False)
+            embed.add_field(name="Total", value=f"{'R$' if order['currency'] == 'BRL' else '$'} {order['total']:.2f} {order['currency']}", inline=False)
+            embed.add_field(name="Forma de Pagamento", value=format_payment_method(order['payment']), inline=False)
+            
+            # Envia mensagem para o DM do admin
+            admin_message = await admin.send(embed=embed)
+            
+            # Adiciona reações para verificação de pagamento
+            await admin_message.add_reaction('✅')  # Confirmar pagamento
+            await admin_message.add_reaction('❌')  # Rejeitar pagamento
+            
+            # Atualiza o status do pedido
+            order['status'] = 'awaiting_payment'
+            
+            # Registra que este admin está gerenciando o pedido
+            admin_orders[order['id']] = {
+                'admin': admin,
+                'message': admin_message,
+                'user': await find_discord_user(order['discordUsername']),
+                'order': order
+            }
+            
+            # Atualiza a mensagem original no canal de pedidos
+            original_embed = message.embeds[0]
+            original_embed.description = f"Pedido sendo gerenciado por {admin.name}"
+            await message.edit(embed=original_embed)
+            
+            # Remove outras reações da mensagem original
+            await message.clear_reactions()
+            
+            # Notifica o usuário
+            user = await find_discord_user(order['discordUsername'])
+            if user:
+                await user.send(f"Seu pedido #{order['id']} foi aprovado e está aguardando pagamento! Um administrador entrará em contato em breve.")
+    except Exception as e:
+        print(f"Erro ao processar reação do admin: {e}")
+        try:
+            await admin.send(f"❌ Erro ao processar o pedido: {str(e)}")
+        except:
+            pass
 
-    # Processa a reação
-    if str(payload.emoji) == APPROVE_EMOJI:
-        if user:
-            # Atualiza o status para aguardando pagamento antes de enviar as instruções
-            await update_order_status(order['id'], 'awaiting_payment')
-            await send_payment_instructions(user, order, payload.message_id)
-        else:
-            await admin.send("❌ Não foi possível enviar as instruções de pagamento pois o usuário não foi encontrado.")
+async def handle_payment_verification(payload):
+    """Manipula reações de admins em mensagens de verificação de pagamento em DMs"""
+    try:
+        # Encontra o pedido correspondente
+        order_id = None
+        for oid, data in admin_orders.items():
+            if data['message'].id == payload.message_id:
+                order_id = oid
+                break
+        
+        if not order_id:
+            return
+        
+        order_data = admin_orders[order_id]
+        admin = order_data['admin']
+        user = order_data['user']
+        order = order_data['order']
+        
+        # Verifica se quem reagiu é o admin responsável
+        if payload.user_id != admin.id:
+            return
+        
+        # Processa a reação
+        if str(payload.emoji) == '✅':  # Pagamento confirmado
+            order['status'] = 'payment_confirmed'
+            
+            # Atualiza a mensagem do admin
+            embed = discord.Embed(
+                title=f"🎯 Pedido #{order['id']} - Pagamento Confirmado",
+                description="O pagamento foi confirmado com sucesso!",
+                color=discord.Color.green()
+            )
+            await order_data['message'].edit(embed=embed)
+            await order_data['message'].clear_reactions()
+            
+            # Notifica o usuário
+            if user:
+                await user.send(f"O pagamento do seu pedido #{order['id']} foi confirmado! Seu pedido está sendo processado.")
+            
+            # Remove o pedido da lista de pedidos gerenciados
+            del admin_orders[order_id]
+            
+        elif str(payload.emoji) == '❌':  # Pagamento rejeitado
+            order['status'] = 'pending'
+            
+            # Atualiza a mensagem do admin
+            embed = discord.Embed(
+                title=f"🎯 Pedido #{order['id']} - Pagamento Rejeitado",
+                description="O pagamento foi rejeitado.",
+                color=discord.Color.red()
+            )
+            await order_data['message'].edit(embed=embed)
+            await order_data['message'].clear_reactions()
+            
+            # Notifica o usuário
+            if user:
+                await user.send(f"O pagamento do seu pedido #{order['id']} foi rejeitado. Por favor, tente novamente ou entre em contato com o suporte.")
+            
+            # Remove o pedido da lista de pedidos gerenciados
+            del admin_orders[order_id]
+    except Exception as e:
+        print(f"Erro ao verificar pagamento: {e}")
+        try:
+            await admin.send(f"❌ Erro ao verificar pagamento: {str(e)}")
+        except:
+            pass
 
-    elif str(payload.emoji) == REJECT_EMOJI:
-        await handle_order_rejection(order, user, admin)
-
-async def handle_payment_reaction(payload):
-    """Manipula reações dos clientes nas mensagens de pagamento"""
+async def handle_payment_confirmation(payload):
+    """Manipula reações dos clientes nas mensagens de confirmação de pagamento"""
     if payload.message_id not in payment_confirmation_messages:
         return
 
@@ -524,63 +642,6 @@ async def notify_payment_confirmation(order, user):
 
     except Exception as e:
         print(f"Erro ao notificar confirmação de pagamento: {e}")
-
-async def handle_payment_verification(payload):
-    """Manipula reações dos administradores na confirmação de pagamento"""
-    if payload.message_id not in payment_verification_messages:
-        return
-
-    order, user, message = payment_verification_messages[payload.message_id]
-    
-    # Busca o membro que reagiu
-    guild = bot.get_guild(payload.guild_id)
-    if not guild:
-        return
-    
-    admin = guild.get_member(payload.user_id)
-    if not admin or not discord.utils.get(admin.roles, id=DISCORD_ADMIN_ROLE_ID):
-        return
-
-    # Processa a reação
-    if str(payload.emoji) == APPROVE_EMOJI:
-        # Admin confirmou o pagamento
-        await update_order_status(order['id'], 'processing')
-        
-        # Notifica o cliente
-        confirm_embed = discord.Embed(
-            title="✅ Pagamento Verificado!",
-            description="Seu pagamento foi confirmado por nossa equipe! O pedido está em processamento.",
-            color=discord.Color.green()
-        )
-        await user.send(embed=confirm_embed)
-        
-        # Notifica os admins
-        admin_embed = discord.Embed(
-            title="✅ Pagamento Verificado",
-            description=f"O pagamento do pedido #{order['id'][-6:]} foi confirmado por {admin.name}",
-            color=discord.Color.green()
-        )
-        await message.reply(embed=admin_embed)
-
-    elif str(payload.emoji) == REJECT_EMOJI:
-        # Admin rejeitou o pagamento
-        await update_order_status(order['id'], 'awaiting_payment')
-        
-        # Notifica o cliente
-        reject_embed = discord.Embed(
-            title="❌ Pagamento Não Confirmado",
-            description="Nossa equipe não conseguiu confirmar seu pagamento. Por favor, verifique se o pagamento foi realizado corretamente e entre em contato conosco se precisar de ajuda.",
-            color=discord.Color.red()
-        )
-        await user.send(embed=reject_embed)
-        
-        # Notifica os admins
-        admin_embed = discord.Embed(
-            title="❌ Pagamento Rejeitado",
-            description=f"O pagamento do pedido #{order['id'][-6:]} foi rejeitado por {admin.name}",
-            color=discord.Color.red()
-        )
-        await message.reply(embed=admin_embed)
 
 async def handle_payment_cancellation(order, user):
     """Manipula o cancelamento de pagamento solicitado pelo cliente"""
