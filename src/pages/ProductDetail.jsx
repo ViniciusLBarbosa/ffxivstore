@@ -41,14 +41,20 @@ export function ProductDetail() {
   const [currentPriceUSD, setCurrentPriceUSD] = useState(0);
   const [selectedGilAmount, setSelectedGilAmount] = useState(1);
   const [availableGil, setAvailableGil] = useState(0);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const productDoc = await getDoc(doc(db, 'products', id));
+        setLoading(true);
+        const productRef = doc(db, 'products', id);
+        const productDoc = await getDoc(productRef);
+        
         if (productDoc.exists()) {
-          const productData = { id: productDoc.id, ...productDoc.data() };
-          setProduct(productData);
+          const productData = productDoc.data();
+          setProduct({ id: productDoc.id, ...productData });
+          
+          // Se for um produto de leveling, inicializa o nível selecionado
           if (productData.category === 'leveling') {
             setSelectedLevel([1, productData.maxLevel || 90]);
             calculatePrices(productData, [1, productData.maxLevel || 90]);
@@ -63,11 +69,11 @@ export function ProductDetail() {
             setCurrentPriceUSD(Number(productData.priceUSD));
           }
         } else {
-          navigate('/products');
+          setError('Produto não encontrado');
         }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-        navigate('/products');
+      } catch (err) {
+        setError('Erro ao carregar produto');
+        console.error('Erro ao carregar produto:', err);
       } finally {
         setLoading(false);
       }
@@ -75,18 +81,11 @@ export function ProductDetail() {
 
     fetchProduct();
 
-    // Adiciona listener para atualização de estoque de Gil
-    const handleGilStockUpdate = async (event) => {
-      const { productId, newSoldGil, availableGil } = event.detail;
+    // Adiciona listener para atualizações de estoque de Gil
+    const handleGilStockUpdate = (event) => {
+      const { productId, inStock } = event.detail;
       if (productId === id) {
-        const available = Number(availableGil) - Number(newSoldGil);
-        setAvailableGil(available);
-        
-        // Ajusta a quantidade selecionada se necessário
-        if (selectedGilAmount > available) {
-          setSelectedGilAmount(available);
-          calculateGilPrice(available);
-        }
+        setProduct(prev => ({ ...prev, inStock }));
       }
     };
 
@@ -95,7 +94,7 @@ export function ProductDetail() {
     return () => {
       window.removeEventListener('gilStockUpdated', handleGilStockUpdate);
     };
-  }, [id, navigate]);
+  }, [id]);
 
   useEffect(() => {
     if (product?.category === 'leveling') {

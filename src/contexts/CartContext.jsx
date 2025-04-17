@@ -204,8 +204,14 @@ export function CartProvider({ children }) {
 
       // Atualiza o estoque de Gil
       const newSoldGil = currentSoldGil + Number(gilAmount);
+      const newAvailableGil = Number(productData.availableGil) - newSoldGil;
+      
+      // Atualiza o status inStock baseado no Gil disponível
+      const newInStock = newAvailableGil > 0;
+      
       await updateDoc(productRef, {
-        soldGil: newSoldGil
+        soldGil: newSoldGil,
+        inStock: newInStock
       });
 
       // Emite um evento customizado para notificar que o estoque foi atualizado
@@ -213,7 +219,8 @@ export function CartProvider({ children }) {
         detail: {
           productId,
           newSoldGil,
-          availableGil: productData.availableGil
+          availableGil: productData.availableGil,
+          inStock: newInStock
         }
       }));
 
