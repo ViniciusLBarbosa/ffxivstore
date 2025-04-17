@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Grid, 
   Card, 
@@ -516,18 +516,32 @@ export function ProductDetail() {
               </Button>
 
               {notification && (
-                <Alert 
-                  severity={notification.includes('já tem') ? 'error' : 'success'}
-                  sx={{ 
-                    mt: 1,
-                    '& .MuiAlert-message': {
-                      width: '100%',
-                      textAlign: 'center'
-                    }
-                  }}
-                >
-                  {notification}
-                </Alert>
+                <>
+                  <Alert 
+                    severity={notification.includes('já tem') ? 'error' : 'success'}
+                    sx={{ 
+                      mt: 1,
+                      '& .MuiAlert-message': {
+                        width: '100%',
+                        textAlign: 'center'
+                      }
+                    }}
+                  >
+                    {notification}
+                  </Alert>
+                  {notification === 'Produto adicionado ao carrinho!' && (
+                    <Button
+                      component={Link}
+                      to="/cart"
+                      variant="outlined"
+                      color="primary"
+                      fullWidth
+                      sx={{ mt: 1 }}
+                    >
+                      Ir para o Carrinho
+                    </Button>
+                  )}
+                </>
               )}
 
               {!product.inStock && (
