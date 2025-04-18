@@ -6,7 +6,6 @@ from config import DISCORD_BOT_TOKEN, DISCORD_GUILD_ID, DISCORD_ADMIN_ROLE_ID, D
 from firebase_service import setup_order_listener, get_pending_orders, update_order_status
 from utils import format_order_message
 import asyncio
-from firebase_admin import firestore
 
 # Configuração do bot
 intents = discord.Intents.default()
@@ -466,33 +465,79 @@ async def on_raw_reaction_add(payload):
 
 async def handle_admin_reaction(payload):
     """Manipula reações dos administradores nos pedidos"""
-    # Verifica se a mensagem está nos order_messages
-    if str(payload.message_id) not in order_messages:
+    order, user = order_messages[payload.message_id]
+    
+    # Busca o membro que reagiu
+    guild = bot.get_guild(payload.guild_id)
+    if not guild:
+        return
+    
+    admin = guild.get_member(payload.user_id)
+    if not admin or not discord.utils.get(admin.roles, id=DISCORD_ADMIN_ROLE_ID):
         return
 
-    order = order_messages[str(payload.message_id)]
-    user = await bot.fetch_user(int(order['userId']))
-    admin = await bot.fetch_user(payload.user_id)
+    # Processa a reação
+    if str(payload.emoji) == APPROVE_EMOJI:
+        if user:
+            # Atualiza o status para aguardando pagamento antes de enviar as instruções
+            await update_order_status(order['id'], 'awaiting_payment')
+            await send_payment_instructions(user, order, payload.message_id)
+        else:
+            await admin.send("❌ Não foi possível enviar as instruções de pagamento pois o usuário não foi encontrado.")
 
-    # Se a reação for ✅
-    if str(payload.emoji) == '✅':
-        # Atualiza o status para awaiting_payment
-        order_ref = db.collection('orders').document(order['id'])
-        await order_ref.update({
-            'status': 'awaiting_payment',
-            'approvedBy': admin.id,
-            'approvedAt': firestore.SERVER_TIMESTAMP
-        })
-
-        # Envia instruções de pagamento para o cliente
-        await send_payment_instructions(order, user)
-        
-        # Notifica o admin
-        await admin.send(f"Pedido aprovado com sucesso! Instruções de pagamento foram enviadas para {user.name}.")
-
-    # Se a reação for ❌
-    elif str(payload.emoji) == '❌':
+    elif str(payload.emoji) == REJECT_EMOJI:
         await handle_order_rejection(order, user, admin)
+
+async def handle_order_rejection(order, user, admin):
+    """Manipula a rejeição de pedidos pelos administradores"""
+    try:
+        # Atualiza o status do pedido para cancelled
+        await update_order_status(order['id'], 'cancelled')
+        
+        # Notifica o cliente se ele existir
+        if user:
+            reject_embed = discord.Embed(
+                title="❌ Pedido Rejeitado",
+                description=(
+                    f"Seu pedido #{order['id'][-6:]} foi rejeitado por um administrador.\n"
+                    "Se tiver dúvidas, entre em contato conosco."
+                ),
+                color=discord.Color.red()
+            )
+            await user.send(embed=reject_embed)
+        
+        # Notifica os administradores
+        admin_channel = bot.get_channel(DISCORD_ADMIN_CHANNEL_ID)
+        if admin_channel:
+            admin_embed = discord.Embed(
+                title="❌ Pedido Rejeitado",
+                description=f"O pedido #{order['id'][-6:]} foi rejeitado por {admin.name}",
+                color=discord.Color.red(),
+                timestamp=datetime.now(timezone.utc)
+            )
+            
+            if user:
+                admin_embed.add_field(
+                    name="👤 Cliente",
+                    value=f"Nome: {user.name}\nID: {user.id}",
+                    inline=True
+                )
+            
+            await admin_channel.send(embed=admin_embed)
+            
+            # Apaga as mensagens relacionadas ao pedido
+            await delete_order_messages(order['id'])
+            
+            print(f"Pedido {order['id']} rejeitado por {admin.name}")
+            
+    except Exception as e:
+        print(f"Erro ao processar rejeição do pedido: {e}")
+        error_embed = discord.Embed(
+            title="❌ Erro ao Rejeitar",
+            description="Ocorreu um erro ao processar a rejeição do pedido.",
+            color=discord.Color.red()
+        )
+        await admin.send(embed=error_embed)
 
 async def handle_payment_reaction(payload):
     """Manipula reações dos clientes nas mensagens de pagamento"""
@@ -1141,61 +1186,6 @@ async def handle_payment_verification(payload):
         )
         await message.reply(embed=admin_embed)
 
-async def handle_payment_cancellation(order, user):
-    """Manipula o cancelamento do pedido pelo cliente"""
-    try:
-        # Atualiza o status do pedido para cancelled
-        await update_order_status(order['id'], 'cancelled')
-        
-        # Cria embed de confirmação do cancelamento
-        cancel_embed = discord.Embed(
-            title="❌ Pedido Cancelado",
-            description=f"Seu pedido #{order['id'][-6:]} foi cancelado conforme solicitado.",
-            color=discord.Color.red()
-        )
-        await user.send(embed=cancel_embed)
-        
-        # Notifica os administradores
-        admin_channel = bot.get_channel(DISCORD_ADMIN_CHANNEL_ID)
-        if admin_channel:
-            admin_embed = discord.Embed(
-                title="❌ Pedido Cancelado pelo Cliente",
-                description=(
-                    f"O cliente {user.name} cancelou o pedido #{order['id'][-6:]}\n"
-                    "O pedido foi marcado como cancelado."
-                ),
-                color=discord.Color.red(),
-                timestamp=datetime.now(timezone.utc)
-            )
-            
-            admin_embed.add_field(
-                name="👤 Cliente",
-                value=f"Nome: {user.name}\nID: {user.id}",
-                inline=True
-            )
-            
-            # Menciona o cargo de admin
-            guild = bot.get_guild(DISCORD_GUILD_ID)
-            mention_text = ""
-            if guild:
-                admin_role = guild.get_role(DISCORD_ADMIN_ROLE_ID)
-                if admin_role:
-                    mention_text = admin_role.mention
-            
-            await admin_channel.send(content=mention_text, embed=admin_embed)
-            
-            # Apaga as mensagens relacionadas ao pedido
-            await delete_order_messages(order['id'])
-            
-    except Exception as e:
-        print(f"Erro ao processar cancelamento do pedido: {e}")
-        error_embed = discord.Embed(
-            title="❌ Erro",
-            description="Ocorreu um erro ao cancelar o pedido. Por favor, tente novamente ou entre em contato com o suporte.",
-            color=discord.Color.red()
-        )
-        await user.send(embed=error_embed)
-
 @bot.command()
 async def concluir(ctx):
     """Marca um pedido como concluído no canal privado após confirmação do cliente e funcionário"""
@@ -1500,42 +1490,63 @@ async def delete_order_messages(order_id):
     except Exception as e:
         print(f"Erro ao apagar mensagens do pedido {order_id}: {e}")
 
-async def handle_order_rejection(order, user, admin):
-    # Envia mensagem pedindo o motivo da rejeição
-    rejection_message = await admin.send("Por favor, digite o motivo da rejeição do pedido:")
-    
+async def handle_payment_cancellation(order, user):
+    """Manipula o cancelamento de pedido solicitado pelo cliente"""
     try:
-        # Espera pela resposta do admin (timeout de 5 minutos)
-        rejection_reason = await bot.wait_for(
-            'message',
-            timeout=300.0,
-            check=lambda m: m.author == admin and m.channel == rejection_message.channel
-        )
-        
         # Atualiza o status do pedido para cancelled
-        order_ref = db.collection('orders').document(order['id'])
-        await order_ref.update({
-            'status': 'cancelled',
-            'rejectionReason': rejection_reason.content,
-            'rejectedBy': admin.id,
-            'rejectedAt': firestore.SERVER_TIMESTAMP
-        })
+        await update_order_status(order['id'], 'cancelled')
         
-        # Notifica o cliente sobre a rejeição
-        client = await bot.fetch_user(int(order['userId']))
-        if client:
-            embed = discord.Embed(
-                title="Pedido Rejeitado",
-                description=f"Seu pedido foi rejeitado por um administrador.\nMotivo: {rejection_reason.content}",
-                color=discord.Color.red()
+        # Notifica o cliente
+        cancel_embed = discord.Embed(
+            title="❌ Pedido Cancelado",
+            description=f"Seu pedido #{order['id'][-6:]} foi cancelado conforme solicitado.",
+            color=discord.Color.red()
+        )
+        await user.send(embed=cancel_embed)
+        
+        # Notifica os administradores
+        admin_channel = bot.get_channel(DISCORD_ADMIN_CHANNEL_ID)
+        if admin_channel:
+            admin_embed = discord.Embed(
+                title="❌ Pedido Cancelado pelo Cliente",
+                description=f"O cliente cancelou o pedido #{order['id'][-6:]}",
+                color=discord.Color.red(),
+                timestamp=datetime.now(timezone.utc)
             )
-            await client.send(embed=embed)
             
-        # Confirma para o admin que a rejeição foi processada
-        await admin.send("Pedido rejeitado com sucesso!")
-        
-    except asyncio.TimeoutError:
-        await admin.send("Tempo esgotado. Por favor, tente rejeitar o pedido novamente.")
+            admin_embed.add_field(
+                name="👤 Cliente",
+                value=f"Nome: {user.name}\nID: {user.id}",
+                inline=True
+            )
+            
+            # Menciona o cargo de admin
+            guild = bot.get_guild(DISCORD_GUILD_ID)
+            mention_text = ""
+            if guild:
+                admin_role = guild.get_role(DISCORD_ADMIN_ROLE_ID)
+                if admin_role:
+                    mention_text = admin_role.mention
+            
+            await admin_channel.send(
+                content=mention_text,
+                embed=admin_embed
+            )
+            
+            # Apaga as mensagens relacionadas ao pedido
+            await delete_order_messages(order['id'])
+            
+            print(f"Pedido {order['id']} cancelado pelo cliente")
+            
+    except Exception as e:
+        print(f"Erro ao processar cancelamento do pedido: {e}")
+        # Notifica o cliente sobre o erro
+        error_embed = discord.Embed(
+            title="❌ Erro ao Cancelar",
+            description="Ocorreu um erro ao processar o cancelamento. Por favor, tente novamente ou entre em contato com o suporte.",
+            color=discord.Color.red()
+        )
+        await user.send(embed=error_embed)
 
 # Inicia o bot
 bot.run(DISCORD_BOT_TOKEN) 

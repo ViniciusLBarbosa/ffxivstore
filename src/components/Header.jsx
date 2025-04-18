@@ -73,7 +73,7 @@ export function Header() {
                   textTransform: 'none'
                 }}
               >
-                Produtos
+                Serviços
               </Button>
             </>
           )}
