@@ -180,7 +180,7 @@ const OrderCard = ({ order }) => {
                   Level: {safeOrder.items[0].startLevel || '?'} - {safeOrder.items[0].endLevel || '?'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Job: {safeOrder.items[0].job || 'Não especificado'}
+                  Job: {safeOrder.items[0].selectedJob || 'Não especificado'}
                 </Typography>
               </Box>
             )}
@@ -200,7 +200,7 @@ const OrderCard = ({ order }) => {
           </Typography>
           {safeOrder.items.map((item) => (
             <Box
-              key={item.category === 'leveling' ? `${item.id}-${item.job}` : item.id}
+              key={item.category === 'leveling' ? `${item.id}-${item.selectedJob}` : item.id}
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -232,7 +232,7 @@ const OrderCard = ({ order }) => {
                       Level: {item.startLevel || '?'} - {item.endLevel || '?'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Job: {item.job || 'Não especificado'}
+                      Job: {item.selectedJob || 'Não especificado'}
                     </Typography>
                   </Box>
                 )}

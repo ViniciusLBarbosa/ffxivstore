@@ -63,10 +63,11 @@ def handle_callback_result(future, order_id):
         print(f"Erro ao processar pedido {order_id}: {e}")
 
 async def get_pending_orders():
-    """Retorna todos os pedidos pendentes"""
+    """Retorna todos os pedidos pendentes que não foram cancelados"""
     try:
         orders_ref = db.collection('orders')
-        query = orders_ref.where('status', '==', 'pending')
+        # Busca pedidos com status 'pending' ou 'awaiting_payment' que não foram cancelados
+        query = orders_ref.where('status', 'in', ['pending', 'awaiting_payment'])
         docs = query.stream()
         
         pending_orders = []
@@ -80,7 +81,9 @@ async def get_pending_orders():
             if 'updatedAt' in order_data:
                 order_data['updatedAt'] = convert_timestamp(order_data['updatedAt'])
             
-            pending_orders.append(order_data)
+            # Verifica se o pedido não foi cancelado
+            if order_data.get('status') != 'cancelled':
+                pending_orders.append(order_data)
         
         return pending_orders
     except Exception as e:

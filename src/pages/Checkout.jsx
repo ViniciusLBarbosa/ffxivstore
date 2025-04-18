@@ -227,7 +227,7 @@ export function Checkout() {
         if (item.category === 'leveling') {
           return {
             ...baseItem,
-            selectedJob: item.selectedJob || null,
+            selectedJob: item.job || null,
             startLevel: item.startLevel || null,
             endLevel: item.endLevel || null
           };

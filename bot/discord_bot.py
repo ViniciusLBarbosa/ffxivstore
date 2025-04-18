@@ -372,13 +372,31 @@ async def check_pending_orders():
             created_at = order.get('createdAt')
             if created_at and (now - created_at) > timedelta(hours=24):
                 try:
+                    # Verifica se o pedido não foi cancelado
+                    if order.get('status') == 'cancelled':
+                        continue
+                        
                     discord_username = order.get('discordId') or order.get('discordUsername')
                     user = await find_discord_user(discord_username)
                     
                     if user:
+                        # Cria mensagem diferente baseada no status
+                        if order.get('status') == 'pending':
+                            title = "⚠️ Lembrete de Aprovação"
+                            description = (
+                                f"Seu pedido #{order['id'][-6:]} ainda está aguardando aprovação.\n"
+                                "Nossa equipe irá analisar em breve."
+                            )
+                        else:  # awaiting_payment
+                            title = "⚠️ Lembrete de Pagamento"
+                            description = (
+                                f"Seu pedido #{order['id'][-6:]} ainda está aguardando pagamento.\n"
+                                "Por favor, efetue o pagamento ou entre em contato conosco se precisar de ajuda."
+                            )
+                            
                         reminder_embed = discord.Embed(
-                            title="⚠️ Lembrete de Pagamento",
-                            description=f"Seu pedido #{order['id'][-6:]} ainda está pendente de pagamento.\nPor favor, efetue o pagamento ou entre em contato conosco se precisar de ajuda.",
+                            title=title,
+                            description=description,
                             color=discord.Color.yellow()
                         )
                         await user.send(embed=reminder_embed)
@@ -620,66 +638,155 @@ async def notify_payment_confirmation(order, user):
         print(f"Erro ao notificar confirmação de pagamento: {e}")
 
 async def send_admin_decision_request(order, user, original_message):
-    """Envia mensagem para o admin decidir se envia para funcionários ou faz o serviço"""
+    """Envia mensagem para o admin decidir se envia para funcionários ou faz o serviço por item"""
     try:
         admin_channel = bot.get_channel(DISCORD_ADMIN_CHANNEL_ID)
         if not admin_channel:
             return
 
-        decision_embed = discord.Embed(
-            title="🤔 Decisão Necessária",
-            description=f"Como você deseja proceder com o pedido #{order['id'][-6:]}?",
-            color=discord.Color.gold()
-        )
+        # Verifica se o pedido tem múltiplos itens diferentes
+        items = order.get('items', [])
+        has_multiple_items = len(items) > 1
+        
+        # Cria um embed para cada item ou um único embed se for um item só
+        if has_multiple_items:
+            # Cria um embed principal para o pedido
+            main_embed = discord.Embed(
+                title="🛍️ Pedido com Múltiplos Itens",
+                description=(
+                    f"O pedido #{order['id'][-6:]} contém {len(items)} itens diferentes.\n"
+                    "Por favor, decida como proceder com cada item individualmente."
+                ),
+                color=discord.Color.blue()
+            )
+            
+            # Adiciona informações do cliente
+            main_embed.add_field(
+                name="👤 Cliente",
+                value=f"Nome: {user.name}\nID: {user.id}",
+                inline=True
+            )
+            
+            # Envia o embed principal
+            main_message = await admin_channel.send(embed=main_embed)
+            
+            # Cria um embed para cada item
+            for i, item in enumerate(items):
+                item_embed = discord.Embed(
+                    title=f"📦 Item {i+1} de {len(items)}",
+                    description=f"Decisão necessária para o item: {item.get('name', 'Item')}",
+                    color=discord.Color.gold()
+                )
+                
+                # Adiciona detalhes do item
+                item_details = f"• Nome: {item.get('name', 'Item')}\n"
+                item_details += f"• Quantidade: {item.get('quantity', 1)}x\n"
+                
+                # Adiciona detalhes específicos baseado na categoria
+                if item.get('category') == 'leveling':
+                    item_details += f"• Job: {item.get('selectedJob', 'N/A')}\n"
+                    item_details += f"• Level: {item.get('startLevel', 'N/A')} → {item.get('endLevel', 'N/A')}\n"
+                elif item.get('category') == 'gil':
+                    item_details += f"• Quantidade: {item.get('gilAmount', 0)} milhões de Gil\n"
+                
+                item_embed.add_field(
+                    name="📝 Detalhes",
+                    value=item_details,
+                    inline=False
+                )
+                
+                item_embed.add_field(
+                    name="🎯 Opções",
+                    value=(
+                        f"{WORKER_EMOJI} - Enviar para os funcionários\n"
+                        f"{ADMIN_EMOJI} - Realizar o serviço você mesmo"
+                    ),
+                    inline=False
+                )
+                
+                # Envia o embed do item e adiciona reações
+                item_message = await admin_channel.send(embed=item_embed)
+                await item_message.add_reaction(WORKER_EMOJI)
+                await item_message.add_reaction(ADMIN_EMOJI)
+                
+                # Armazena no cache com informações do item
+                admin_decision_messages[item_message.id] = {
+                    "order": order,
+                    "user": user,
+                    "original_message": original_message,
+                    "item_index": i,
+                    "item": item
+                }
+                
+                # Aguarda um pouco entre as mensagens
+                await asyncio.sleep(1)
+        else:
+            # Comportamento original para pedidos com um único item
+            decision_embed = discord.Embed(
+                title="🤔 Decisão Necessária",
+                description=f"Como você deseja proceder com o pedido #{order['id'][-6:]}?",
+                color=discord.Color.gold()
+            )
 
-        # Adiciona detalhes do pedido
-        items_text = ""
-        for item in order.get('items', []):
-            items_text += f"• {item.get('name', 'Item')}\n"
-            if item.get('category') == 'leveling':
-                items_text += f"  - Level: {item.get('startLevel')} → {item.get('endLevel')}\n"
-                items_text += f"  - Job: {item.get('selectedJob')}\n"
-            elif item.get('category') == 'gil':
-                items_text += f"  - Gil: {item.get('gilAmount')} milhões\n"
+            # Adiciona detalhes do pedido
+            items_text = ""
+            for item in order.get('items', []):
+                items_text += f"• {item.get('name', 'Item')}\n"
+                if item.get('category') == 'leveling':
+                    items_text += f"  - Level: {item.get('startLevel')} → {item.get('endLevel')}\n"
+                    items_text += f"  - Job: {item.get('selectedJob')}\n"
+                elif item.get('category') == 'gil':
+                    items_text += f"  - Gil: {item.get('gilAmount')} milhões\n"
 
-        decision_embed.add_field(
-            name="📦 Detalhes do Pedido",
-            value=items_text or "Nenhum item",
-            inline=False
-        )
+            decision_embed.add_field(
+                name="📦 Detalhes do Pedido",
+                value=items_text or "Nenhum item",
+                inline=False
+            )
 
-        decision_embed.add_field(
-            name="👤 Cliente",
-            value=f"Discord: {user.name}\nID: {user.id}",
-            inline=True
-        )
+            decision_embed.add_field(
+                name="👤 Cliente",
+                value=f"Discord: {user.name}\nID: {user.id}",
+                inline=True
+            )
 
-        decision_embed.add_field(
-            name="🎯 Opções",
-            value=(
-                f"{WORKER_EMOJI} - Enviar para os funcionários\n"
-                f"{ADMIN_EMOJI} - Realizar o serviço você mesmo"
-            ),
-            inline=False
-        )
+            decision_embed.add_field(
+                name="🎯 Opções",
+                value=(
+                    f"{WORKER_EMOJI} - Enviar para os funcionários\n"
+                    f"{ADMIN_EMOJI} - Realizar o serviço você mesmo"
+                ),
+                inline=False
+            )
 
-        # Envia a mensagem e adiciona as reações
-        message = await admin_channel.send(embed=decision_embed)
-        await message.add_reaction(WORKER_EMOJI)
-        await message.add_reaction(ADMIN_EMOJI)
+            # Envia a mensagem e adiciona as reações
+            message = await admin_channel.send(embed=decision_embed)
+            await message.add_reaction(WORKER_EMOJI)
+            await message.add_reaction(ADMIN_EMOJI)
 
-        # Armazena no cache
-        admin_decision_messages[message.id] = (order, user, original_message)
+            # Armazena no cache
+            admin_decision_messages[message.id] = {
+                "order": order,
+                "user": user,
+                "original_message": original_message,
+                "item_index": 0,
+                "item": order.get('items', [])[0] if order.get('items') else None
+            }
 
     except Exception as e:
         print(f"Erro ao enviar solicitação de decisão: {e}")
 
 async def handle_admin_decision(payload):
-    """Manipula a decisão do admin sobre o destino do pedido"""
+    """Manipula a decisão do admin sobre o destino do pedido ou item específico"""
     if payload.message_id not in admin_decision_messages:
         return
 
-    order, user, original_message = admin_decision_messages[payload.message_id]
+    data = admin_decision_messages[payload.message_id]
+    order = data["order"]
+    user = data["user"]
+    original_message = data["original_message"]
+    item_index = data["item_index"]
+    item = data["item"]
     
     # Busca o membro que reagiu
     guild = bot.get_guild(payload.guild_id)
@@ -694,12 +801,15 @@ async def handle_admin_decision(payload):
 
     if str(payload.emoji) == WORKER_EMOJI:
         # Admin decidiu enviar para os funcionários
-        await send_work_notification(order, user)
+        await send_work_notification(order, user, item)
         
         # Notifica a decisão
         decision_notification = discord.Embed(
-            title="👥 Pedido Enviado aos Funcionários",
-            description=f"O pedido #{order['id'][-6:]} foi enviado para o canal dos funcionários.",
+            title="👥 Item Enviado aos Funcionários",
+            description=(
+                f"O item '{item.get('name', 'Item')}' do pedido #{order['id'][-6:]} "
+                f"foi enviado para o canal dos funcionários."
+            ),
             color=discord.Color.blue()
         )
         await original_message.reply(embed=decision_notification)
@@ -711,14 +821,14 @@ async def handle_admin_decision(payload):
             await update_order_status(order['id'], 'processing')
             
             # Cria thread privada para o admin e o cliente
-            work_thread = await create_work_thread(order, user, admin, channel)
+            work_thread = await create_work_thread(order, user, admin, channel, item)
             
             if work_thread:
                 # Notifica o cliente
                 client_embed = discord.Embed(
                     title="🎮 Seu pedido foi iniciado!",
                     description=(
-                        f"Um administrador irá realizar seu pedido.\n"
+                        f"Um administrador irá realizar o item '{item.get('name', 'Item')}' do seu pedido.\n"
                         f"Uma thread privada foi criada para comunicação: {work_thread.mention}"
                     ),
                     color=discord.Color.green()
@@ -727,8 +837,11 @@ async def handle_admin_decision(payload):
                 
                 # Notifica no canal de admins
                 admin_notification = discord.Embed(
-                    title="👨‍💼 Pedido Assumido",
-                    description=f"O administrador {admin.name} assumiu o pedido #{order['id'][-6:]}",
+                    title="👨‍💼 Item Assumido",
+                    description=(
+                        f"O administrador {admin.name} assumiu o item '{item.get('name', 'Item')}' "
+                        f"do pedido #{order['id'][-6:]}"
+                    ),
                     color=discord.Color.green()
                 )
                 await original_message.reply(embed=admin_notification)
@@ -858,7 +971,7 @@ async def send_payment_instructions(user, order, admin_message=None):
     except Exception as e:
         print(f"Erro ao enviar instruções de pagamento: {e}")
 
-async def send_work_notification(order, user):
+async def send_work_notification(order, user, item):
     """Envia notificação de trabalho disponível para os funcionários"""
     try:
         workers_channel = bot.get_channel(DISCORD_WORKERS_CHANNEL_ID)
@@ -869,25 +982,25 @@ async def send_work_notification(order, user):
         # Cria o embed para o trabalho
         work_embed = discord.Embed(
             title="🛠️ Novo Trabalho Disponível!",
-            description=f"Pedido #{order['id'][-6:]} está pronto para ser iniciado.",
+            description=f"Item do pedido #{order['id'][-6:]} está pronto para ser iniciado.",
             color=discord.Color.blue(),
             timestamp=datetime.now(timezone.utc)
         )
 
-        # Adiciona os detalhes do pedido com informações específicas
-        items_text = ""
-        for item in order.get('items', []):
-            items_text += f"• {item.get('name', 'Item')}\n"
-            if item.get('category') == 'leveling':
-                items_text += f"  - Job: {item.get('selectedJob', 'N/A')}\n"
-                items_text += f"  - Level: {item.get('startLevel', 'N/A')} → {item.get('endLevel', 'N/A')}\n"
-            elif item.get('category') == 'gil':
-                items_text += f"  - Quantidade: {item.get('gilAmount', 0)} milhões de Gil\n"
-            items_text += f"  - Quantidade: {item.get('quantity', 1)}x\n\n"
+        # Adiciona os detalhes do item específico
+        item_details = f"• Nome: {item.get('name', 'Item')}\n"
+        item_details += f"• Quantidade: {item.get('quantity', 1)}x\n"
+        
+        # Adiciona detalhes específicos baseado na categoria
+        if item.get('category') == 'leveling':
+            item_details += f"• Job: {item.get('selectedJob', 'N/A')}\n"
+            item_details += f"• Level: {item.get('startLevel', 'N/A')} → {item.get('endLevel', 'N/A')}\n"
+        elif item.get('category') == 'gil':
+            item_details += f"• Quantidade: {item.get('gilAmount', 0)} milhões de Gil\n"
 
         work_embed.add_field(
-            name="📦 Itens do Pedido",
-            value=items_text or "Nenhum item",
+            name="📦 Detalhes do Item",
+            value=item_details,
             inline=False
         )
 
@@ -915,7 +1028,7 @@ async def send_work_notification(order, user):
         await message.add_reaction(APPROVE_EMOJI)  # ✅
 
         # Armazena a mensagem no cache
-        work_messages[message.id] = (order, user, None)
+        work_messages[message.id] = (order, user, None, item)
         
         print(f"Notificação de trabalho enviada para o canal dos funcionários")
 
@@ -927,7 +1040,7 @@ async def handle_work_reaction(payload):
     if payload.message_id not in work_messages:
         return
 
-    order, user, current_worker = work_messages[payload.message_id]
+    order, user, current_worker, item = work_messages[payload.message_id]
     
     # Busca o membro que reagiu
     guild = bot.get_guild(payload.guild_id)
@@ -952,7 +1065,7 @@ async def handle_work_reaction(payload):
             await update_order_status(order['id'], 'processing')
             
             # Atualiza o cache com o funcionário designado
-            work_messages[payload.message_id] = (order, user, worker)
+            work_messages[payload.message_id] = (order, user, worker, item)
             
             # Atualiza o embed com as informações do funcionário
             message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
@@ -969,7 +1082,7 @@ async def handle_work_reaction(payload):
             await message.edit(embed=embed)
             
             # Cria a thread privada
-            work_thread = await create_work_thread(order, user, worker, message.channel)
+            work_thread = await create_work_thread(order, user, worker, message.channel, item)
             
             if work_thread:
                 # Notifica o cliente
@@ -1006,7 +1119,7 @@ async def handle_work_reaction(payload):
         except Exception as e:
             print(f"Erro ao processar aceitação do trabalho: {e}")
 
-async def create_work_thread(order, user, worker, channel):
+async def create_work_thread(order, user, worker, channel, item):
     """Cria uma thread privada para comunicação entre cliente e funcionário"""
     try:
         # Cria a thread com nome baseado no ID do pedido
@@ -1039,6 +1152,23 @@ async def create_work_thread(order, user, worker, channel):
         welcome_embed.add_field(
             name="📦 Detalhes do Pedido",
             value=f"Pedido #{order['id'][-6:]}\n",
+            inline=False
+        )
+
+        # Adiciona detalhes do item específico
+        item_details = f"• Nome: {item.get('name', 'Item')}\n"
+        item_details += f"• Quantidade: {item.get('quantity', 1)}x\n"
+        
+        # Adiciona detalhes específicos baseado na categoria
+        if item.get('category') == 'leveling':
+            item_details += f"• Job: {item.get('selectedJob', 'N/A')}\n"
+            item_details += f"• Level: {item.get('startLevel', 'N/A')} → {item.get('endLevel', 'N/A')}\n"
+        elif item.get('category') == 'gil':
+            item_details += f"• Quantidade: {item.get('gilAmount', 0)} milhões de Gil\n"
+
+        welcome_embed.add_field(
+            name="📝 Detalhes do Item",
+            value=item_details,
             inline=False
         )
 
@@ -1104,7 +1234,8 @@ async def create_work_thread(order, user, worker, channel):
             "channel": thread,
             "client_user": user,
             "worker_user": worker,
-            "type": None  # Será 'complete' ou 'cancel' dependendo da reação
+            "type": None,  # Será 'complete' ou 'cancel' dependendo da reação
+            "item": item  # Armazena o item específico
         }
 
         return thread
@@ -1211,7 +1342,7 @@ async def concluir(ctx):
         thread = ctx.channel
         
         # Busca o pedido nos work_messages
-        for msg_id, (order, user, assigned_worker) in work_messages.items():
+        for msg_id, (order, user, assigned_worker, item) in work_messages.items():
             if order['id'] == order_id:
                 client = user
                 worker = assigned_worker
