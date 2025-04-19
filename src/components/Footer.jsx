@@ -23,38 +23,35 @@ export function Footer() {
               FFXIV Store
             </Typography>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Sua loja confiável para serviços de FFXIV. Oferecemos clears de Savage, Ultimate e muito mais!
+              Your trusted shop for FFXIV services. We offer Savage, Ultimate clears, and much more!
             </Typography>
           </Grid>
 
           {/* Links Rápidos */}
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" gutterBottom>
-              Links Rápidos
+              Quick Links
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link component={RouterLink} to="/" color="inherit" sx={{ textDecoration: 'none' }}>
                 Home
               </Link>
               <Link component={RouterLink} to="/products" color="inherit" sx={{ textDecoration: 'none' }}>
-                Produtos
+                Services
               </Link>
               <Link component={RouterLink} to="/cart" color="inherit" sx={{ textDecoration: 'none' }}>
-                Carrinho
+                Cart
               </Link>
               <Link component={RouterLink} to="/orders" color="inherit" sx={{ textDecoration: 'none' }}>
-                Meus Pedidos
-              </Link>
-              <Link component={RouterLink} to="/terms" color="inherit" sx={{ textDecoration: 'none' }}>
-                Termos de Uso
+                My Orders
               </Link>
             </Box>
           </Grid>
 
-          {/* Categorias */}
+          {/* Categorias
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" gutterBottom>
-              Categorias
+              Categories
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link component={RouterLink} to="/products?category=savage" color="inherit" sx={{ textDecoration: 'none' }}>
@@ -70,12 +67,12 @@ export function Footer() {
                 Leveling
               </Link>
             </Box>
-          </Grid>
+          </Grid> */}
 
           {/* Contato */}
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="h6" gutterBottom>
-              Redes Sociais
+              Social Media
             </Typography>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <IconButton color="inherit" aria-label="Facebook">
@@ -91,9 +88,6 @@ export function Footer() {
                 <Chat />
               </IconButton>
             </Box>
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              Contato: suporte@ffxivstore.com
-            </Typography>
           </Grid>
         </Grid>
 
@@ -101,15 +95,15 @@ export function Footer() {
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
           <Typography variant="body2">
-            © {new Date().getFullYear()} FFXIV Store. Todos os direitos reservados.
+            © {new Date().getFullYear()} FFXIV Store. All rights reserved.
           </Typography>
           <Box sx={{ display: 'flex', gap: 3 }}>
             <Link component={RouterLink} to="/terms" color="inherit" sx={{ textDecoration: 'none' }}>
-              Termos de Uso
+              Terms of Use
             </Link>
-            <Link component={RouterLink} to="/privacy" color="inherit" sx={{ textDecoration: 'none' }}>
-              Política de Privacidade
-            </Link>
+            {/* <Link component={RouterLink} to="/privacy" color="inherit" sx={{ textDecoration: 'none' }}>
+              Privacy Policy
+            </Link> */}
           </Box>
         </Box>
 

@@ -38,25 +38,25 @@ export function Signup() {
     setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem');
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     try {
-      // Criar usuário no Firebase Auth
+      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      // Atualizar o perfil do usuário com o nome
+      // Update user profile with name
       await updateProfile(userCredential.user, {
         displayName: formData.name
       });
 
-      // Criar documento do usuário no Firestore
+      // Create user document in Firestore
       await setDoc(doc(db, collections.users, userCredential.user.uid), {
         name: formData.name,
         email: formData.email,
@@ -66,13 +66,13 @@ export function Signup() {
 
       navigate('/');
     } catch (error) {
-      console.error('Erro ao criar conta:', error);
+      console.error('Error creating account:', error);
       if (error.code === 'auth/email-already-in-use') {
-        setError('Este email já está em uso');
+        setError('This email is already in use');
       } else if (error.code === 'auth/weak-password') {
-        setError('A senha deve ter pelo menos 6 caracteres');
+        setError('Password must be at least 6 characters');
       } else {
-        setError('Erro ao criar conta. Tente novamente.');
+        setError('Error creating account. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export function Signup() {
         }}
       >
         <Typography component="h1" variant="h5">
-          Criar Conta
+          Create Account
         </Typography>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
           <TextField
@@ -98,7 +98,7 @@ export function Signup() {
             required
             fullWidth
             id="name"
-            label="Nome"
+            label="Name"
             name="name"
             autoComplete="name"
             autoFocus
@@ -121,7 +121,7 @@ export function Signup() {
             required
             fullWidth
             name="password"
-            label="Senha"
+            label="Password"
             type="password"
             id="password"
             autoComplete="new-password"
@@ -133,7 +133,7 @@ export function Signup() {
             required
             fullWidth
             name="confirmPassword"
-            label="Confirmar Senha"
+            label="Confirm Password"
             type="password"
             id="confirmPassword"
             value={formData.confirmPassword}
@@ -151,11 +151,11 @@ export function Signup() {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? 'Criando conta...' : 'Criar Conta'}
+            {loading ? 'Creating account...' : 'Create Account'}
           </Button>
           <Box sx={{ textAlign: 'center' }}>
             <Link component={RouterLink} to="/login" variant="body2">
-              Já tem uma conta? Faça login
+              Already have an account? Login
             </Link>
           </Box>
         </Box>

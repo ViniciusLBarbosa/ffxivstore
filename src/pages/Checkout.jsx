@@ -26,7 +26,7 @@ import { formatPrice } from '../utils/format';
 import { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
-const steps = ['Seu Endereço', 'Contato Discord', 'Forma de Pagamento', 'Revisão do Pedido'];
+const steps = ['Your Address', 'Discord Contact', 'Payment Method', 'Order Review'];
 
 export function Checkout() {
   const navigate = useNavigate();
@@ -205,7 +205,7 @@ export function Checkout() {
     }
 
     if (!isStepValid()) {
-      setError('Por favor, preencha todos os campos obrigatórios.');
+      setError('Please fill in all required fields.');
       return;
     }
 
@@ -298,7 +298,7 @@ export function Checkout() {
               <TextField
                 required
                 fullWidth
-                label="CEP"
+                label="CEP/ZIP CODE"
                 name="zipCode"
                 value={formData.address.zipCode}
                 onChange={handleCepChange}
@@ -309,14 +309,14 @@ export function Checkout() {
                     </InputAdornment>
                   )
                 }}
-                helperText="Digite o CEP para autocompletar o endereço"
+                helperText="Enter CEP to autocomplete the address."
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
-                label="Rua"
+                label="Street"
                 name="street"
                 value={formData.address.street}
                 onChange={handleInputChange('address')}
@@ -326,7 +326,7 @@ export function Checkout() {
               <TextField
                 required
                 fullWidth
-                label="Número"
+                label="Number"
                 name="number"
                 value={formData.address.number}
                 onChange={handleInputChange('address')}
@@ -335,7 +335,7 @@ export function Checkout() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Complemento"
+                label="Complement"
                 name="complement"
                 value={formData.address.complement}
                 onChange={handleInputChange('address')}
@@ -345,7 +345,7 @@ export function Checkout() {
               <TextField
                 required
                 fullWidth
-                label="Bairro"
+                label="Neighborhood"
                 name="neighborhood"
                 value={formData.address.neighborhood}
                 onChange={handleInputChange('address')}
@@ -355,7 +355,7 @@ export function Checkout() {
               <TextField
                 required
                 fullWidth
-                label="Cidade"
+                label="City"
                 name="city"
                 value={formData.address.city}
                 onChange={handleInputChange('address')}
@@ -365,7 +365,7 @@ export function Checkout() {
               <TextField
                 required
                 fullWidth
-                label="Estado"
+                label="State"
                 name="state"
                 value={formData.address.state}
                 onChange={handleInputChange('address')}
@@ -378,19 +378,19 @@ export function Checkout() {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Contato Discord
+              Discord Contact
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Precisamos do seu Discord para entrar em contato sobre a entrega do produto.
+              We need your Discord to contact you regarding the completion of the service.
             </Typography>
             <TextField
               required
               fullWidth
-              label="Usuário Discord"
+              label="Discord Username"
               value={formData.discord}
               onChange={handleInputChange('discord')}
               placeholder="exemplo#0000"
-              helperText="Digite seu usuário do Discord completo, incluindo o número"
+              helperText="Enter your Discord username"
               sx={{ mt: 2 }}
             />
           </Box>
@@ -400,11 +400,11 @@ export function Checkout() {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Forma de Pagamento
+              Payment Method
             </Typography>
             
             <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-              Moeda
+              Currency
             </Typography>
             <FormControl component="fieldset" sx={{ mb: 3 }}>
               <RadioGroup
@@ -421,13 +421,13 @@ export function Checkout() {
                 <FormControlLabel
                   value="USD"
                   control={<Radio />}
-                  label="Dólar (USD)"
+                  label="Dollar (USD)"
                 />
               </RadioGroup>
             </FormControl>
 
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Método de Pagamento
+              Payment Method
             </Typography>
             <FormControl component="fieldset">
               <RadioGroup
@@ -443,7 +443,7 @@ export function Checkout() {
                 <FormControlLabel
                   value="credit"
                   control={<Radio />}
-                  label="Cartão de Crédito"
+                  label="Credit Card"
                 />
                 <FormControlLabel
                   value="boleto"
@@ -459,7 +459,7 @@ export function Checkout() {
         return (
           <Box>
             <Typography variant="h6" gutterBottom>
-              Resumo do Pedido
+              Order Summary.
             </Typography>
             {cartItems.map((item) => (
               <Box key={item.id} sx={{ mb: 2 }}>
@@ -492,7 +492,7 @@ export function Checkout() {
   if (!user) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Typography>Você precisa estar logado para finalizar a compra.</Typography>
+        <Typography>You need to be logged in to finalize the purchase.</Typography>
       </Container>
     );
   }
@@ -500,7 +500,7 @@ export function Checkout() {
   if (cartItems.length === 0) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Typography>Seu carrinho está vazio.</Typography>
+        <Typography>Your cart is empty.</Typography>
       </Container>
     );
   }
@@ -509,7 +509,7 @@ export function Checkout() {
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom align="center">
-          Finalizar Compra
+          Finalize Purchase
         </Typography>
 
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
@@ -533,7 +533,7 @@ export function Checkout() {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           {activeStep !== 0 && (
             <Button onClick={handleBack}>
-              Voltar
+              Back
             </Button>
           )}
           <Button
@@ -541,7 +541,7 @@ export function Checkout() {
             onClick={handleNext}
             disabled={loading || !isStepValid()}
           >
-            {activeStep === steps.length - 1 ? 'Finalizar Pedido' : 'Próximo'}
+            {activeStep === steps.length - 1 ? 'Finalize Order' : 'Next'}
           </Button>
         </Box>
       </Paper>

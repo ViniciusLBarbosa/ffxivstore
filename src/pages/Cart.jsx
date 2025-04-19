@@ -108,11 +108,11 @@ export function Cart() {
         <Paper elevation={3} sx={{ textAlign: 'center', py: 8, px: 3 }}>
           <ShoppingCartIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h5" gutterBottom>
-            Seu carrinho está vazio
+            Your Cart is Empty
           </Typography>
           {removedItems.length > 0 && (
             <Alert severity="info" sx={{ mt: 2, mb: 2, maxWidth: 400, mx: 'auto' }}>
-              Alguns itens foram removidos automaticamente por estarem fora de estoque.
+              Some items were removed automatically due to being out of stock.
             </Alert>
           )}
           <Button
@@ -122,7 +122,7 @@ export function Cart() {
             sx={{ mt: 2 }}
             size="large"
           >
-            Continuar Comprando
+            Go Back to Shopping
           </Button>
         </Paper>
       </Container>
@@ -134,12 +134,12 @@ export function Cart() {
       {/* Área principal dos produtos */}
       <Box sx={{ flex: 1, p: 4, overflow: 'auto' }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 3, fontWeight: 'bold' }}>
-          Carrinho de Compras
+          Cart
         </Typography>
 
         {removedItems.length > 0 && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            Alguns itens foram removidos automaticamente por estarem fora de estoque.
+            Some items were removed automatically due to being out of stock.
           </Alert>
         )}
 
@@ -255,14 +255,14 @@ export function Cart() {
       >
         <Box sx={{ p: 3, flex: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Resumo do Pedido
+            Oreder Summary
           </Typography>
           
           <Box sx={{ mt: 3 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
                 <Typography color="text.secondary" gutterBottom>
-                  Total em Reais (BRL)
+                  Total in Reais (BRL)
                 </Typography>
                 <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>
                   {formatPrice(calculateTotalBRL())}
@@ -271,7 +271,7 @@ export function Cart() {
               
               <Box>
                 <Typography color="text.secondary" gutterBottom>
-                  Total em Dólar (USD)
+                  Total in Dollar (USD)
                 </Typography>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                   ${calculateTotalUSD().toFixed(2)}
@@ -299,7 +299,7 @@ export function Cart() {
               onClick={handleCheckout}
               disabled={cartItems.length === 0}
             >
-              Finalizar Compra
+              Complete Your Order
             </Button>
             <Button
               component={Link}
@@ -310,7 +310,7 @@ export function Cart() {
               size="large"
               sx={{ mt: 2 }}
             >
-              Continuar Comprando
+              Go Back to Shopping
             </Button>
           </Box>
         </Box>

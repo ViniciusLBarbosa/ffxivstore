@@ -32,7 +32,7 @@ export function Settings() {
       };
       
       // Aqui você implementaria a lógica para salvar as configurações no backend
-      setSuccess('Configurações atualizadas com sucesso!');
+      setSuccess('Settings updated successfully!');
       setTimeout(() => setSuccess(''), 3000);
       
       return newSettings;
@@ -42,7 +42,7 @@ export function Settings() {
   if (!user) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Typography>Você precisa estar logado para acessar as configurações.</Typography>
+        <Typography>You have to log in to see your information.</Typography>
       </Container>
     );
   }
@@ -50,7 +50,7 @@ export function Settings() {
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Configurações
+        Settings
       </Typography>
 
       {success && (
@@ -61,13 +61,13 @@ export function Settings() {
 
       <Paper sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          Notificações
+          Notifications
         </Typography>
         <List>
           <ListItem>
             <ListItemText
-              primary="Notificações por Email"
-              secondary="Receba atualizações importantes sobre sua conta"
+              primary="E-Mail Notifications"
+              secondary="Receive notifications via email for important updates"
             />
             <ListItemSecondaryAction>
               <Switch
@@ -80,8 +80,8 @@ export function Settings() {
           <Divider />
           <ListItem>
             <ListItemText
-              primary="Atualizações de Pedidos"
-              secondary="Receba notificações sobre o status dos seus pedidos"
+              primary="Order Updates"
+              secondary="Recieve updates on your order status"
             />
             <ListItemSecondaryAction>
               <Switch
@@ -94,8 +94,8 @@ export function Settings() {
           <Divider />
           <ListItem>
             <ListItemText
-              primary="Emails Promocionais"
-              secondary="Receba ofertas especiais e promoções"
+              primary="Sale Alerts"
+              secondary="Recieve alerts for sales and promotions"
             />
             <ListItemSecondaryAction>
               <Switch
@@ -114,8 +114,8 @@ export function Settings() {
           <List>
             <ListItem>
               <ListItemText
-                primary="Autenticação de Dois Fatores"
-                secondary="Adicione uma camada extra de segurança à sua conta"
+                primary="Two-Factor Authentication"
+                secondary="Add an extra layer of security to your account"
               />
               <ListItemSecondaryAction>
                 <Switch

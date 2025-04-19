@@ -26,7 +26,7 @@ export function Navbar() {
             Home
           </Button>
           <Button color="inherit" component={RouterLink} to="/products">
-            Produtos
+            Services
           </Button>
           <IconButton
             color="inherit"
@@ -41,7 +41,7 @@ export function Navbar() {
           {user ? (
             <>
               <Button color="inherit" component={RouterLink} to="/profile">
-                Perfil
+                Profile
               </Button>
               {showAdminButton && (
                 <Button color="inherit" component={RouterLink} to="/admin">

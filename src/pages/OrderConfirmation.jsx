@@ -80,16 +80,16 @@ export function OrderConfirmation() {
         <CheckCircleOutlineIcon color="success" sx={{ fontSize: 64, mb: 2 }} />
         
         <Typography variant="h4" gutterBottom>
-          Pedido Confirmado!
+          Order confirmed!
         </Typography>
         
         <Typography variant="h6" color="text.secondary" gutterBottom>
-          Número do pedido: #{orderId.slice(-6)}
+          Order number: #{orderId.slice(-6)}
         </Typography>
 
         <Box sx={{ my: 4 }}>
           <Typography variant="body1" paragraph>
-            Obrigado por sua compra! Seu pedido foi recebido e está sendo processado.
+            Thanks for your order! We will process it as soon as possible.
           </Typography>
           
           <Box sx={{ 
@@ -101,10 +101,10 @@ export function OrderConfirmation() {
             mb: 3
           }}>
             <Typography variant="h6" gutterBottom color="primary">
-              Informações de Contato
+              Contact Information
             </Typography>
             <Typography variant="body1" paragraph>
-              Entraremos em contato através de:
+              We will contact you via the information below:
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Typography variant="body1">
@@ -117,7 +117,7 @@ export function OrderConfirmation() {
           </Box>
 
           <Typography variant="body1" color="text.secondary" paragraph>
-            Valor total: {order.currency === 'USD' 
+            Total: {order.currency === 'USD' 
               ? `$${Number(order.total).toFixed(2)}`
               : formatPrice(order.total)
             }
@@ -131,7 +131,7 @@ export function OrderConfirmation() {
             variant="contained"
             color="primary"
           >
-            Ver Meus Pedidos
+            Go to My Orders
           </Button>
           
           <Button
@@ -139,7 +139,7 @@ export function OrderConfirmation() {
             to="/products"
             variant="outlined"
           >
-            Continuar Comprando
+            Go Back To Shopping
           </Button>
         </Box>
       </Paper>

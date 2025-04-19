@@ -17,13 +17,13 @@ export function ImageUpload({ onImageUpload, disableCrop = false, aspectRatio = 
 
     // Validar o tipo do arquivo
     if (!file.type.startsWith('image/')) {
-      setError('Por favor, selecione apenas arquivos de imagem.');
+      setError('Please select image files only.');
       return;
     }
 
     // Validar o tamanho do arquivo (máximo 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('A imagem deve ter no máximo 5MB.');
+      setError('The image must be 5MB or less.');
       return;
     }
 
@@ -48,7 +48,7 @@ export function ImageUpload({ onImageUpload, disableCrop = false, aspectRatio = 
         onImageUpload(imageUrl);
         setPreview(imageUrl);
       } catch (error) {
-        setError('Erro ao fazer upload da imagem. Tente novamente.');
+        setError('Error uploading image. Please try again.');
         console.error('Erro no upload:', error);
       } finally {
         setLoading(false);
@@ -65,7 +65,7 @@ export function ImageUpload({ onImageUpload, disableCrop = false, aspectRatio = 
       onImageUpload(imageUrl);
       setPreview(imageUrl);
     } catch (error) {
-      setError('Erro ao fazer upload da imagem. Tente novamente.');
+      setError('Error uploading image. Please try again.');
       console.error('Erro no upload:', error);
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export function ImageUpload({ onImageUpload, disableCrop = false, aspectRatio = 
           disabled={loading}
           sx={{ mb: 2 }}
         >
-          {loading ? 'Enviando...' : 'Escolher Imagem'}
+          {loading ? 'Uploading...' : 'Choose Image'}
         </Button>
       </label>
 

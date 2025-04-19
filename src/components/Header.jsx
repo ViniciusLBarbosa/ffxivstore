@@ -73,7 +73,7 @@ export function Header() {
                   textTransform: 'none'
                 }}
               >
-                Serviços
+                Services
               </Button>
             </>
           )}
@@ -138,25 +138,25 @@ export function Header() {
                   <ListItemIcon>
                     <Person fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Perfil</ListItemText>
+                  <ListItemText>Profile</ListItemText>
                 </MenuItem>
                 <MenuItem component={Link} to="/orders" onClick={handleClose}>
                   <ListItemIcon>
                     <Receipt fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Pedidos</ListItemText>
+                  <ListItemText>Orders</ListItemText>
                 </MenuItem>
                 <MenuItem component={Link} to="/settings" onClick={handleClose}>
                   <ListItemIcon>
                     <Settings fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Configurações</ListItemText>
+                  <ListItemText>Settings</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleSignOut}>
                   <ListItemIcon>
                     <Logout fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Sair</ListItemText>
+                  <ListItemText>Logout</ListItemText>
                 </MenuItem>
               </Menu>
             </>

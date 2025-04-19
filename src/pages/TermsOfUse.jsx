@@ -5,91 +5,89 @@ export function TermsOfUse() {
     <Container maxWidth="md" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Termos de Uso
+          Terms of Use
         </Typography>
 
         <Typography paragraph sx={{ mt: 3 }}>
-          Por favor, leia atentamente estes Termos de Uso antes de utilizar nossos serviços.
+          Please read these Terms of Use carefully before using our services.
         </Typography>
 
         <Typography paragraph>
-          Ao acessar e utilizar este site e nossos serviços relacionados à venda de conteúdo de Final Fantasy XIV, 
-          você concorda com os seguintes termos e condições:
+          By accessing and using this site and our services related to the sale of Final Fantasy XIV content, 
+          you agree to the following terms and conditions:
         </Typography>
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="h6" gutterBottom>
-            1. Descrição dos Serviços
+            1. Description of Services
           </Typography>
           <Typography paragraph>
-            Oferecemos a venda de conteúdo digital relacionado ao jogo Final Fantasy XIV. Isso pode incluir, 
-            mas não se limita a, itens virtuais, moeda do jogo, serviços de boosting, e outros serviços 
-            relacionados ao jogo.
+            We offer the sale of digital content related to the game Final Fantasy XIV. This can include, 
+            but is not limited to, virtual items, game currency, boosting services, and other services 
+            related to the game.
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            2. Violação da Política do Final Fantasy XIV
+            2. Violation of Final Fantasy XIV Policy
           </Typography>
           <Typography paragraph>
-            Você reconhece e concorda que os serviços oferecidos neste site podem violar os termos de serviço 
-            e as políticas da Square Enix, a desenvolvedora e detentora dos direitos de Final Fantasy XIV. 
-            A Square Enix pode tomar medidas contra contas que utilizem serviços de terceiros não autorizados, 
-            incluindo a suspensão ou banimento permanente da conta.
+            You recognize and agree that the services offered on this site may violate the terms of service 
+            and policies of Square Enix, the developer and owner of Final Fantasy XIV. Square Enix may take measures against accounts that use unauthorized third-party services, 
+            including suspension or permanent ban of the account.
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            3. Isenção de Responsabilidade por Banimentos
+            3. Ban Disclaimer
           </Typography>
           <Typography paragraph>
-            Você expressamente concorda que a utilização dos nossos serviços é feita por sua própria conta e risco. 
-            Não nos responsabilizamos por qualquer suspensão, banimento ou outra penalidade que sua conta de 
-            Final Fantasy XIV possa sofrer como resultado da utilização dos nossos serviços. Ao utilizar nossos 
-            serviços, você assume total responsabilidade por quaisquer consequências que possam ocorrer.
+            You expressly agree that the use of our services is at your own risk. 
+            We are not responsible for any suspension, ban, or other penalty that your 
+            Final Fantasy XIV account may suffer as a result of using our services. 
+            By using our services, you assume full responsibility for any consequences that may occur.
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            4. Conduta do Usuário
+            4. User Conduct
           </Typography>
           <Typography paragraph>
-            Ao utilizar nossos serviços, você concorda em não:
+            By using our services, you agree not to:
           </Typography>
           <Typography component="ul" sx={{ pl: 4 }}>
-            <li>Violar qualquer lei ou regulamento aplicável.</li>
-            <li>Utilizar nossos serviços para atividades ilegais ou não autorizadas.</li>
-            <li>Tentar obter acesso não autorizado a contas de outros usuários ou a qualquer parte do nosso site.</li>
-            <li>Interferir ou interromper a operação do nosso site ou dos nossos serviços.</li>
+            <li>Violate any applicable law or regulation.</li>
+            <li>Use our services for illegal or unauthorized activities.</li>
+            <li>Attempt to gain unauthorized access to other users' accounts or any part of our website.</li>
+            <li>Interfere with or disrupt the operation of our website or services.</li>
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            5. Pagamento
+            5. Payment
           </Typography>
           <Typography paragraph>
-            Os pagamentos pelos nossos serviços devem ser realizados de acordo com os métodos especificados no site. 
-            Todos os preços estão sujeitos a alterações sem aviso prévio.
+            Payments for our services must be made according to the methods specified on the website. 
+            All prices are subject to change without prior notice.
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            6. Alterações nos Termos de Uso
+            6. Changes to Terms of Use
           </Typography>
           <Typography paragraph>
-            Reservamo-nos o direito de modificar estes Termos de Uso a qualquer momento, sem aviso prévio. É sua 
-            responsabilidade revisar periodicamente estes termos para estar ciente de quaisquer alterações. O uso 
-            continuado do nosso site e serviços após a publicação de quaisquer alterações constitui sua aceitação 
-            dessas alterações.
+            We reserve the right to modify these Terms of Use at any time, without prior notice. It is your 
+            responsibility to periodically review these terms to be aware of any changes. Continued use of 
+            our website and services after the posting of any changes constitutes your acceptance of those changes.
           </Typography>
 
           <Typography paragraph sx={{ mt: 4 }}>
-            Ao utilizar nossos serviços, você declara que leu, entendeu e concorda com todos os termos e condições 
-            presentes neste Termos de Uso.
+            By using our services, you declare that you have read, understood, and agree to all the terms and conditions 
+            present in these Terms of Use.
           </Typography>
 
           <Typography paragraph sx={{ mt: 2, fontWeight: 'bold' }}>
-            Se você não concorda com algum destes termos, por favor, não utilize nossos serviços.
+            If you do not agree with any of these terms, please do not use our services.
           </Typography>
         </Box>
 
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-          Última atualização: {new Date().toLocaleDateString()}
+          Last updated: {new Date().toLocaleDateString()}
         </Typography>
       </Paper>
     </Container>

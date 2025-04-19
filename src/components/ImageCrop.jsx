@@ -67,7 +67,7 @@ export function ImageCrop({ open, onClose, imageUrl, onCropComplete, aspectRatio
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Recortar Imagem</DialogTitle>
+      <DialogTitle>Crop Image</DialogTitle>
       <DialogContent>
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 2 }}>
           <ReactCrop
@@ -88,9 +88,9 @@ export function ImageCrop({ open, onClose, imageUrl, onCropComplete, aspectRatio
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button onClick={handleCropComplete} variant="contained" color="primary">
-          Concluir
+          Finish
         </Button>
       </DialogActions>
     </Dialog>

@@ -87,7 +87,7 @@ export function CartProvider({ children }) {
       if (existingLevelingItem) {
         return {
           success: false,
-          message: 'Você já tem este produto com o mesmo job no carrinho'
+          message: 'You already have this leveling item for the same job in your cart'
         };
       }
     }
@@ -136,7 +136,7 @@ export function CartProvider({ children }) {
 
     return {
       success: true,
-      message: 'Produto adicionado ao carrinho!'
+      message: 'Service added to cart successfully'
     };
   };
 
@@ -195,7 +195,7 @@ export function CartProvider({ children }) {
       const availableGil = Number(productData.availableGil) - currentSoldGil;
 
       if (Number(gilAmount) > availableGil) {
-        throw new Error('Quantidade de Gil solicitada não está mais disponível');
+        throw new Error('Gil quantity requested exceeds available stock');
       }
 
       // Atualiza o estoque de Gil

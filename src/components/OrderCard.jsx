@@ -5,12 +5,12 @@ import { formatPrice } from '../utils/format';
 
 const getStatusLabel = (status) => {
   const labels = {
-    pending: 'Pendente',
-    awaiting_payment: 'Aguardando Pagamento',
-    payment_confirmed: 'Pagamento Confirmado',
-    processing: 'Em Processamento',
-    completed: 'Concluído',
-    cancelled: 'Cancelado'
+    pending: 'Pending',
+    awaiting_payment: 'Waiting Payment',
+    payment_confirmed: 'Payment Confirmed',
+    processing: 'Processing...',
+    completed: 'Done',
+    cancelled: 'Cancelled'
   };
   return labels[status] || status;
 };
@@ -30,7 +30,7 @@ const getStatusColor = (status) => {
 const getPaymentMethodLabel = (method) => {
   const labels = {
     pix: 'PIX',
-    credit_card: 'Cartão de Crédito',
+    credit_card: 'Credit Card',
     boleto: 'Boleto'
   };
   return labels[method] || method;
@@ -119,7 +119,7 @@ export function OrderCard({ order, onStatusChange }) {
               onClick={() => setExpanded(!expanded)}
             >
               <Typography variant="body2">
-                {expanded ? 'Ocultar detalhes' : 'Ver detalhes'}
+                {expanded ? 'Hide details' : 'Show details'}
               </Typography>
               {expanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </Box>
@@ -129,7 +129,7 @@ export function OrderCard({ order, onStatusChange }) {
         <Collapse in={expanded}>
           <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
             <Typography variant="subtitle2" color="text.primary" gutterBottom>
-              Itens do Pedido:
+              Order Items:
             </Typography>
             {order.items?.map((item, index) => (
               <Box key={index} sx={{ mb: 1 }}>
@@ -140,13 +140,13 @@ export function OrderCard({ order, onStatusChange }) {
             ))}
 
             <Typography variant="subtitle2" color="text.primary" sx={{ mt: 2 }} gutterBottom>
-              Informações do Cliente:
+              Customer Information:
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Discord: {order.discordId}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Método de Pagamento: {getPaymentMethodLabel(order.paymentMethod)}
+              Payment Method: {getPaymentMethodLabel(order.paymentMethod)}
             </Typography>
           </Box>
         </Collapse>
@@ -167,25 +167,25 @@ export function OrderCard({ order, onStatusChange }) {
             onClick={() => handleStatusChange('pending')}
             sx={{ color: 'warning.main' }}
           >
-            Pendente
+            Pending
           </MenuItem>
           <MenuItem 
             onClick={() => handleStatusChange('processing')}
             sx={{ color: 'info.main' }}
           >
-            Em Processamento
+            Processing...
           </MenuItem>
           <MenuItem 
             onClick={() => handleStatusChange('completed')}
             sx={{ color: 'success.main' }}
           >
-            Concluído
+            Done
           </MenuItem>
           <MenuItem 
             onClick={() => handleStatusChange('cancelled')}
             sx={{ color: 'error.main' }}
           >
-            Cancelado
+            Cancelled
           </MenuItem>
         </Menu>
       </CardContent>

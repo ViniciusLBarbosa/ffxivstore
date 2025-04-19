@@ -20,7 +20,7 @@ export function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Busca os Serviços mais recentes
+        // Fetch latest Services
         const newProductsQuery = query(
           collection(db, 'products'),
           orderBy('createdAt', 'desc'),
@@ -33,7 +33,7 @@ export function Home() {
         }));
         setNewProducts(newProductsList);
 
-        // Busca os Serviços em destaque
+        // Fetch featured Services
         const featuredProductsQuery = query(
           collection(db, 'products'),
           where('featured', '==', true),
@@ -76,7 +76,7 @@ export function Home() {
         />
         {!product.inStock && (
           <Chip
-            label="Fora de Estoque"
+            label="Out of Stock"
             color="error"
             size="small"
             sx={{
@@ -148,8 +148,8 @@ export function Home() {
             }}
             onClick={() => navigate(`/products/${product.id}`)}
           >
-            Ver Detalhes
-            {!product.inStock && ' (Fora de Estoque)'}
+            View Details
+            {!product.inStock && ' (Out of Stock)'}
           </Button>
         </Box>
       </CardContent>
@@ -159,7 +159,7 @@ export function Home() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
-        Serviços em Destaque
+        Featured Services
       </Typography>
 
       <Box sx={{ mb: 6 }}>
@@ -192,7 +192,7 @@ export function Home() {
       </Box>
 
       <Typography variant="h4" component="h2" gutterBottom sx={{ mb: 4 }}>
-        Novos Serviços
+        New Services
       </Typography>
 
       <Box sx={{ mb: 6 }}>

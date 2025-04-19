@@ -6,7 +6,7 @@ import { db } from '../services/firebase';
 import { formatPrice } from '../utils/format';
 
 const categories = [
-  { value: 'all', label: 'Todos' },
+  { value: 'all', label: 'All' },
   { value: 'savage', label: 'Savage Clear', color: 'warning' },
   { value: 'ultimate', label: 'Ultimate Clear', color: 'error' },
   { value: 'extreme', label: 'Extreme Clear', color: 'info' },
@@ -46,7 +46,7 @@ export function Products() {
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
-      // Produtos em estoque aparecem primeiro
+      // In-stock products appear first
       if (a.inStock && !b.inStock) return -1;
       if (!a.inStock && b.inStock) return 1;
       return 0;
@@ -61,7 +61,7 @@ export function Products() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Todos os Produtos
+          All Products
         </Typography>
         
         <Box sx={{ mb: 3 }}>
@@ -69,7 +69,7 @@ export function Products() {
             value={selectedCategory}
             exclusive
             onChange={handleCategoryChange}
-            aria-label="categoria do produto"
+            aria-label="product category"
             sx={{
               display: 'flex',
               flexWrap: 'wrap',
@@ -103,7 +103,7 @@ export function Products() {
 
         <TextField
           fullWidth
-          label="Buscar produtos"
+          label="Search products"
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -134,7 +134,7 @@ export function Products() {
                 />
                 {!product.inStock && (
                   <Chip
-                    label="Fora de Estoque"
+                    label="Out of Stock"
                     color="error"
                     size="small"
                     sx={{
@@ -145,7 +145,7 @@ export function Products() {
                   />
                 )}
                 <Chip
-                  label={categories.find(cat => cat.value === product.category)?.label || 'Outros'}
+                  label={categories.find(cat => cat.value === product.category)?.label || 'Others'}
                   color={getCategoryColor(product.category)}
                   size="small"
                   sx={{
@@ -197,8 +197,8 @@ export function Products() {
                     }}
                     onClick={() => navigate(`/products/${product.id}`)}
                   >
-                    Ver Detalhes
-                    {!product.inStock && ' (Fora de Estoque)'}
+                    View Details
+                    {!product.inStock && ' (Out of Stock)'}
                   </Button>
                 </Box>
               </CardContent>

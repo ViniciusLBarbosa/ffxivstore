@@ -123,7 +123,7 @@ export function Login() {
             required
             fullWidth
             name="password"
-            label="Senha"
+            label="Password"
             type="password"
             id="password"
             autoComplete="current-password"
@@ -142,7 +142,7 @@ export function Login() {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? 'Logging in...' : 'Login'}
           </Button>
         </Box>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
@@ -152,16 +152,16 @@ export function Login() {
             onClick={() => setShowForgotPassword(true)}
             sx={{ cursor: 'pointer' }}
           >
-            Esqueceu a senha?
+            Forgot password?
           </Link>
           <Link component={RouterLink} to="/signup" variant="body2">
-            Não tem uma conta? Registre-se
+            Don't have an account? Sign up
           </Link>
         </Box>
       </Box>
 
       <Dialog open={showForgotPassword} onClose={() => setShowForgotPassword(false)}>
-        <DialogTitle>Redefinir Senha</DialogTitle>
+        <DialogTitle>Reset Password</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -185,13 +185,13 @@ export function Login() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowForgotPassword(false)}>Cancelar</Button>
+          <Button onClick={() => setShowForgotPassword(false)}>Cancel</Button>
           <Button 
             onClick={handleResetPassword} 
             disabled={resetLoading}
             variant="contained"
           >
-            {resetLoading ? 'Enviando...' : 'Enviar'}
+            {resetLoading ? 'Sending...' : 'Send'}
           </Button>
         </DialogActions>
       </Dialog>

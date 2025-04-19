@@ -820,31 +820,49 @@ async def handle_admin_decision(payload):
             # Atualiza o status do pedido para processing
             await update_order_status(order['id'], 'processing')
             
-            # Cria thread privada para o admin e o cliente
-            work_thread = await create_work_thread(order, user, admin, channel, item)
+            # Cria canal privado para o admin e o cliente
+            work_channel = await create_work_thread(order, user, admin, channel, item)
             
-            if work_thread:
+            if work_channel:
                 # Notifica o cliente
                 client_embed = discord.Embed(
                     title="🎮 Seu pedido foi iniciado!",
                     description=(
-                        f"Um administrador irá realizar o item '{item.get('name', 'Item')}' do seu pedido.\n"
-                        f"Uma thread privada foi criada para comunicação: {work_thread.mention}"
+                        f"O funcionário {admin.name} foi designado para seu pedido.\n"
+                        f"Um canal privado foi criado para comunicação: {work_channel.mention}"
                     ),
                     color=discord.Color.green()
                 )
                 await user.send(embed=client_embed)
                 
-                # Notifica no canal de admins
-                admin_notification = discord.Embed(
-                    title="👨‍💼 Item Assumido",
+                # Notifica o funcionário por DM
+                worker_embed = discord.Embed(
+                    title="✅ Trabalho Aceito",
                     description=(
-                        f"O administrador {admin.name} assumiu o item '{item.get('name', 'Item')}' "
-                        f"do pedido #{order['id'][-6:]}"
+                        f"Você aceitou o pedido #{order['id'][-6:]}\n"
+                        f"Canal de comunicação: {work_channel.mention}"
                     ),
                     color=discord.Color.green()
                 )
-                await original_message.reply(embed=admin_notification)
+                worker_embed.add_field(
+                    name="📝 Próximos Passos",
+                    value=(
+                        "1. Utilize o canal criado para comunicação com o cliente\n"
+                        "2. Realize o serviço conforme especificado\n"
+                        "3. Confirme a conclusão do trabalho quando finalizar"
+                    ),
+                    inline=False
+                )
+                await admin.send(embed=worker_embed)
+
+                # Avisa que o canal será arquivado
+                await work_channel.send(
+                    embed=discord.Embed(
+                        title="⚠️ Aviso",
+                        description="Este canal será movido para a categoria 'Arquivado' em 5 minutos.",
+                        color=discord.Color.orange()
+                    )
+                )
 
         except Exception as e:
             print(f"Erro ao processar decisão do admin: {e}")
@@ -1081,16 +1099,16 @@ async def handle_work_reaction(payload):
             embed.color = discord.Color.green()
             await message.edit(embed=embed)
             
-            # Cria a thread privada
-            work_thread = await create_work_thread(order, user, worker, message.channel, item)
+            # Cria canal privado
+            work_channel = await create_work_thread(order, user, worker, message.channel, item)
             
-            if work_thread:
+            if work_channel:
                 # Notifica o cliente
                 client_embed = discord.Embed(
                     title="🎮 Seu pedido foi iniciado!",
                     description=(
                         f"O funcionário {worker.name} foi designado para seu pedido.\n"
-                        f"Uma thread privada foi criada para comunicação: {work_thread.mention}"
+                        f"Um canal privado foi criado para comunicação: {work_channel.mention}"
                     ),
                     color=discord.Color.green()
                 )
@@ -1101,14 +1119,14 @@ async def handle_work_reaction(payload):
                     title="✅ Trabalho Aceito",
                     description=(
                         f"Você aceitou o pedido #{order['id'][-6:]}\n"
-                        f"Thread de comunicação: {work_thread.mention}"
+                        f"Canal de comunicação: {work_channel.mention}"
                     ),
                     color=discord.Color.green()
                 )
                 worker_embed.add_field(
                     name="📝 Próximos Passos",
                     value=(
-                        "1. Utilize a thread criada para comunicação com o cliente\n"
+                        "1. Utilize o canal criado para comunicação com o cliente\n"
                         "2. Realize o serviço conforme especificado\n"
                         "3. Confirme a conclusão do trabalho quando finalizar"
                     ),
@@ -1116,34 +1134,59 @@ async def handle_work_reaction(payload):
                 )
                 await worker.send(embed=worker_embed)
 
+                # Avisa que o canal será arquivado
+                await work_channel.send(
+                    embed=discord.Embed(
+                        title="⚠️ Aviso",
+                        description="Este canal será movido para a categoria 'Arquivado' em 5 minutos.",
+                        color=discord.Color.orange()
+                    )
+                )
+
         except Exception as e:
             print(f"Erro ao processar aceitação do trabalho: {e}")
 
 async def create_work_thread(order, user, worker, channel, item):
-    """Cria uma thread privada para comunicação entre cliente e funcionário"""
+    """Cria um canal privado para comunicação entre cliente e funcionário"""
     try:
-        # Cria a thread com nome baseado no ID do pedido
-        thread_name = f"pedido-{order['id'][-6:]}"
+        # Busca o servidor
+        guild = bot.get_guild(DISCORD_GUILD_ID)
+        if not guild:
+            print(f"Servidor não encontrado (ID: {DISCORD_GUILD_ID})")
+            return None
+
+        # Busca ou cria a categoria "Em Andamento"
+        in_progress_category = discord.utils.get(guild.categories, name="Em Andamento")
+        if not in_progress_category:
+            in_progress_category = await guild.create_category("Em Andamento")
+
+        # Busca ou cria a categoria "Arquivado"
+        archived_category = discord.utils.get(guild.categories, name="Arquivado")
+        if not archived_category:
+            archived_category = await guild.create_category("Arquivado")
+
+        # Cria o canal privado com nome baseado no ID do pedido
+        channel_name = f"pedido-{order['id'][-6:]}"
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+            worker: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        }
         
-        # Cria a thread
-        thread = await channel.create_thread(
-            name=thread_name,
-            type=discord.ChannelType.private_thread,
-            auto_archive_duration=1440  # 24 horas
+        work_channel = await guild.create_text_channel(
+            name=channel_name,
+            category=in_progress_category,
+            overwrites=overwrites
         )
 
-        # Adiciona os participantes
-        await thread.add_user(user)
-        await thread.add_user(worker)
-
-        # Armazena a thread no cache
-        work_threads[order['id']] = thread.id
+        # Armazena o canal no cache
+        work_threads[order['id']] = work_channel.id
 
         # Cria o embed de boas-vindas
         welcome_embed = discord.Embed(
-            title="🤝 Thread de Comunicação",
+            title="🤝 Canal de Comunicação",
             description=(
-                "Esta é uma thread privada para comunicação entre cliente e funcionário.\n"
+                "Este é um canal privado para comunicação entre cliente e funcionário.\n"
                 "Por favor, utilizem este espaço para trocar informações necessárias para o serviço."
             ),
             color=discord.Color.blue()
@@ -1184,7 +1227,7 @@ async def create_work_thread(order, user, worker, channel, item):
         welcome_embed.add_field(
             name="⚠️ Importante",
             value=(
-                "• Esta thread será arquivada quando o serviço for concluído\n"
+                "• Este canal será movido para a categoria 'Arquivado' quando o serviço for concluído\n"
                 "• Mantenham uma comunicação clara e profissional\n"
                 "• Em caso de problemas, contactem a administração"
             ),
@@ -1216,12 +1259,12 @@ async def create_work_thread(order, user, worker, channel, item):
         )
 
         # Envia as mensagens
-        await thread.send(
+        await work_channel.send(
             content=f"Bem-vindos {user.mention} e {worker.mention}!",
             embed=welcome_embed
         )
         
-        actions_msg = await thread.send(embed=actions_embed)
+        actions_msg = await work_channel.send(embed=actions_embed)
         await actions_msg.add_reaction(APPROVE_EMOJI)  # ✅
         await actions_msg.add_reaction(REJECT_EMOJI)   # ❌
 
@@ -1231,31 +1274,46 @@ async def create_work_thread(order, user, worker, channel, item):
             "worker_confirmed": False,
             "message_id": actions_msg.id,
             "message": actions_msg,
-            "channel": thread,
+            "channel": work_channel,
             "client_user": user,
             "worker_user": worker,
             "type": None,  # Será 'complete' ou 'cancel' dependendo da reação
             "item": item  # Armazena o item específico
         }
 
-        return thread
+        return work_channel
 
     except Exception as e:
-        print(f"Erro ao criar thread de trabalho: {e}")
+        print(f"Erro ao criar canal de trabalho: {e}")
         return None
 
 async def archive_work_thread(order_id):
-    """Arquiva a thread de trabalho"""
+    """Move o canal de trabalho para a categoria Arquivado"""
     try:
-        thread_id = work_threads.get(order_id)
-        if thread_id:
-            thread = bot.get_channel(thread_id)
-            if thread:
-                await thread.archive(locked=True)  # Arquiva e tranca a thread
+        channel_id = work_threads.get(order_id)
+        if channel_id:
+            channel = bot.get_channel(channel_id)
+            if channel:
+                # Busca a categoria Arquivado
+                guild = channel.guild
+                archived_category = discord.utils.get(guild.categories, name="Arquivado")
+                
+                if not archived_category:
+                    # Cria a categoria se não existir
+                    archived_category = await guild.create_category("Arquivado")
+                
+                # Move o canal para a categoria Arquivado
+                await channel.edit(category=archived_category)
+                
+                # Remove as permissões de envio de mensagens
+                for target, _ in channel.overwrites.items():
+                    await channel.set_permissions(target, send_messages=False)
+                
+                # Remove do cache
                 del work_threads[order_id]
-                print(f"Thread do pedido {order_id[-6:]} arquivada com sucesso")
+                print(f"Canal do pedido {order_id[-6:]} movido para Arquivado com sucesso")
     except Exception as e:
-        print(f"Erro ao arquivar thread de trabalho: {e}")
+        print(f"Erro ao arquivar canal de trabalho: {e}")
 
 async def handle_payment_verification(payload):
     """Manipula reações dos administradores na confirmação de pagamento"""

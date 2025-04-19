@@ -56,12 +56,12 @@ const getStatusColor = (status) => {
 
 const getStatusLabel = (status) => {
   const statusLabels = {
-    'pending': 'Pendente',
-    'awaiting_payment': 'Aguardando Pagamento',
-    'payment_confirmed': 'Pagamento Confirmado',
-    'processing': 'Em Processamento',
-    'completed': 'Concluído',
-    'cancelled': 'Cancelado'
+    'pending': 'Pending',
+    'awaiting_payment': 'Awaiting Payment',
+    'payment_confirmed': 'Payment Confirmed',
+    'processing': 'Processing',
+    'completed': 'Completed',
+    'cancelled': 'Cancelled'
   };
   return statusLabels[status] || status;
 };
@@ -123,7 +123,7 @@ const OrderCard = ({ order, onStatusChange }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box>
               <Typography variant="h6" sx={{ color: 'primary.main' }}>
-                Pedido #{order.id?.slice(-6) || 'N/A'}
+                Order #{order.id?.slice(-6) || 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {order.createdAt?.toLocaleDateString('pt-BR', {
@@ -466,14 +466,14 @@ const EditProductDialog = ({ open, onClose, product }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Editar Produto</DialogTitle>
+      <DialogTitle>Edit Product</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Nome"
+                label="Name"
                 name="name"
                 value={formData.name}
                 onChange={handleEditFormInputChange}
@@ -484,7 +484,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Descrição"
+                label="Description"
                 name="description"
                 value={formData.description}
                 onChange={handleEditFormInputChange}
@@ -497,7 +497,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="URL da Imagem"
+                label="URL of Image"
                 name="image"
                 value={formData.image}
                 onChange={handleEditFormInputChange}
@@ -507,7 +507,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
 
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Categoria</InputLabel>
+                <InputLabel>Category</InputLabel>
                 <Select
                   name="category"
                   value={formData.category}
@@ -527,7 +527,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Preço Base (BRL)"
+                    label="Base Price (BRL)"
                     name="basePrice"
                     value={formData.basePrice}
                     onChange={handleEditFormInputChange}
@@ -541,7 +541,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Preço Base (USD)"
+                    label="Base Price (USD)"
                     name="basePriceUSD"
                     value={formData.basePriceUSD}
                     onChange={handleEditFormInputChange}
@@ -555,7 +555,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Multiplicador por Level (BRL)"
+                    label="Level Multiplier (BRL)"
                     name="levelMultiplier"
                     value={formData.levelMultiplier}
                     onChange={handleEditFormInputChange}
@@ -569,7 +569,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Multiplicador por Level (USD)"
+                    label="Level Multiplier (USD)"
                     name="levelMultiplierUSD"
                     value={formData.levelMultiplierUSD}
                     onChange={handleEditFormInputChange}
@@ -582,7 +582,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 </Grid>
                 <Grid item xs={12}>
                   <FormControl fullWidth>
-                    <InputLabel>Jobs Disponíveis</InputLabel>
+                    <InputLabel>Available Jobs</InputLabel>
                     <Select
                       multiple
                       name="availableJobs"
@@ -603,7 +603,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Nível Máximo"
+                    label="Max Level"
                     name="maxLevel"
                     value={formData.maxLevel}
                     onChange={handleEditFormInputChange}
@@ -614,7 +614,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                       max: 100,
                       step: 1
                     }}
-                    helperText="Nível máximo que o cliente poderá selecionar"
+                    helperText="Maximum level that the client can select"
                   />
                 </Grid>
               </>
@@ -623,7 +623,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Preço (BRL)"
+                    label="Price (BRL)"
                     name="priceBRL"
                     value={formData.priceBRL}
                     onChange={handleEditFormInputChange}
@@ -637,7 +637,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="Preço (USD)"
+                    label="Price (USD)"
                     name="priceUSD"
                     value={formData.priceUSD}
                     onChange={handleEditFormInputChange}
@@ -654,13 +654,13 @@ const EditProductDialog = ({ open, onClose, product }) => {
             {formData.category === 'gil' && (
               <>
                 <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                  Configuração de Gil
+                  Gil Configuration
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Preço por Milhão (R$)"
+                      label="Price per Million (R$)"
                       name="pricePerMillion"
                       value={formData.pricePerMillion}
                       onChange={handleEditFormInputChange}
@@ -671,13 +671,13 @@ const EditProductDialog = ({ open, onClose, product }) => {
                         min: 0,
                         step: 0.01
                       }}
-                      helperText="Preço em Reais por milhão de Gil"
+                      helperText="Price in Reais per million of Gil"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Preço por Milhão ($)"
+                      label="Price per Million ($)"
                       name="pricePerMillionUSD"
                       value={formData.pricePerMillionUSD}
                       onChange={handleEditFormInputChange}
@@ -688,7 +688,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                         min: 0,
                         step: 0.01
                       }}
-                      helperText="Preço em Dólar por milhão de Gil"
+                      helperText="Price in Dollar per million of Gil"
                     />
                   </Grid>
                 </Grid>
@@ -697,7 +697,7 @@ const EditProductDialog = ({ open, onClose, product }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Adicionar Gil (em milhões)"
+                      label="Add Gil (in millions)"
                       name="gilToAdd"
                       type="number"
                       inputProps={{
@@ -711,26 +711,26 @@ const EditProductDialog = ({ open, onClose, product }) => {
                           availableGil: Number(product.availableGil || 0) + value
                         }));
                       }}
-                      helperText="Quantidade de Gil a ser adicionada ao estoque"
+                      helperText="Quantity of Gil to be added to stock"
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <TextField
                       fullWidth
-                      label="Gil Vendido (em milhões)"
+                      label="Sold Gil (in millions)"
                       value={product.soldGil || 0}
                       disabled
                       margin="normal"
-                      helperText="Quantidade de Gil já vendida"
+                      helperText="Quantity of Gil already sold"
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Gil Total após adição: {Number(formData.availableGil).toLocaleString()} milhões
+                        Total Gil after addition: {Number(formData.availableGil).toLocaleString()} millions
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Gil Disponível após adição: {(Number(formData.availableGil) - (product.soldGil || 0)).toLocaleString()} milhões
+                        Available Gil after addition: {(Number(formData.availableGil) - (product.soldGil || 0)).toLocaleString()} millions
                       </Typography>
                     </Box>
                   </Grid>
@@ -747,15 +747,15 @@ const EditProductDialog = ({ open, onClose, product }) => {
                     name="inStock"
                   />
                 }
-                label="Em Estoque"
+                label="In Stock"
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancelar</Button>
+          <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" color="primary">
-            Salvar
+            Save
           </Button>
         </DialogActions>
       </form>
@@ -1136,7 +1136,7 @@ export function Admin() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom color="text.primary">
-        Painel Administrativo
+        Admin Dashboard
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
@@ -1152,9 +1152,9 @@ export function Admin() {
             },
           }}
         >
-          <Tab label="Cadastrar Produto" />
-          <Tab label="Produtos Cadastrados" />
-          <Tab label="Pedidos" />
+          <Tab label="Add Product" />
+          <Tab label="Products" />
+          <Tab label="Orders" />
         </Tabs>
       </Box>
 
@@ -1177,13 +1177,13 @@ export function Admin() {
         }}>
           <CardContent>
             <Typography variant="h6" gutterBottom color="text.primary">
-              Novo Produto
+              New Product
             </Typography>
 
             <Box component="form" onSubmit={handleAddProduct}>
               <TextField
                 fullWidth
-                label="Nome do Produto"
+                label="Product Name"
                 name="name"
                 value={newProduct.name}
                 onChange={handleInputChange}
@@ -1203,7 +1203,7 @@ export function Admin() {
               
               <TextField
                 fullWidth
-                label="Preço em Reais"
+                label="Price in Reais"
                 name="priceBRL"
                 value={`R$ ${newProduct.priceBRL}`}
                 onChange={handleInputChange}
@@ -1217,7 +1217,7 @@ export function Admin() {
               
               <TextField
                 fullWidth
-                label="Preço em Dólar"
+                label="Price in Dollar"
                 name="priceUSD"
                 value={`$ ${newProduct.priceUSD}`}
                 onChange={handleInputChange}
@@ -1231,7 +1231,7 @@ export function Admin() {
               
               <TextField
                 fullWidth
-                label="Descrição"
+                label="Description"
                 name="description"
                 value={newProduct.description}
                 onChange={handleInputChange}
@@ -1244,7 +1244,7 @@ export function Admin() {
               <TextField
                 select
                 fullWidth
-                label="Categoria"
+                label="Category"
                 name="category"
                 value={newProduct.category}
                 onChange={handleInputChange}
@@ -1262,13 +1262,13 @@ export function Admin() {
               {newProduct.category === 'leveling' && (
                 <>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    Configuração de Preços em Reais (R$)
+                    Price Configuration in Reais (R$)
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço Base (R$)"
+                        label="Base Price (R$)"
                         name="basePrice"
                         value={newProduct.basePrice}
                         onChange={handleInputChange}
@@ -1279,13 +1279,13 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Preço inicial em Reais"
+                        helperText="Initial Price in Reais"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Multiplicador por Level (R$)"
+                        label="Level Multiplier (R$)"
                         name="levelMultiplier"
                         value={newProduct.levelMultiplier}
                         onChange={handleInputChange}
@@ -1296,19 +1296,19 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Valor adicional por level em Reais"
+                        helperText="Additional value per level in Reais"
                       />
                     </Grid>
                   </Grid>
 
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-                    Configuração de Preços em Dólar ($)
+                    Price Configuration in Dollar ($)
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço Base ($)"
+                        label="Base Price ($)"
                         name="basePriceUSD"
                         value={newProduct.basePriceUSD}
                         onChange={handleInputChange}
@@ -1319,13 +1319,13 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Preço inicial em Dólar"
+                        helperText="Initial Price in Dollar"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Multiplicador por Level ($)"
+                        label="Level Multiplier ($)"
                         name="levelMultiplierUSD"
                         value={newProduct.levelMultiplierUSD}
                         onChange={handleInputChange}
@@ -1336,7 +1336,7 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Valor adicional por level em Dólar"
+                        helperText="Additional value per level in Dollar"
                       />
                     </Grid>
                   </Grid>
@@ -1345,7 +1345,7 @@ export function Admin() {
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Nível Máximo"
+                        label="Max Level"
                         name="maxLevel"
                         value={newProduct.maxLevel}
                         onChange={handleInputChange}
@@ -1356,14 +1356,14 @@ export function Admin() {
                           max: 100,
                           step: 1
                         }}
-                        helperText="Nível máximo que o cliente poderá selecionar"
+                        helperText="Maximum level that the client can select"
                       />
                     </Grid>
                   </Grid>
 
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle1" gutterBottom>
-                      Jobs Disponíveis
+                      Available Jobs
                     </Typography>
                     <Grid container spacing={1}>
                       {[
@@ -1402,13 +1402,13 @@ export function Admin() {
               {newProduct.category === 'gil' && (
                 <>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    Configuração de Preços por Milhão de Gil
+                    Gil Configuration
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço por Milhão (R$)"
+                        label="Price per Million (R$)"
                         name="pricePerMillion"
                         value={newProduct.pricePerMillion}
                         onChange={handleInputChange}
@@ -1419,13 +1419,13 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Preço em Reais por milhão de Gil"
+                        helperText="Price in Reais per million of Gil"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Preço por Milhão ($)"
+                        label="Price per Million ($)"
                         name="pricePerMillionUSD"
                         value={newProduct.pricePerMillionUSD}
                         onChange={handleInputChange}
@@ -1436,7 +1436,7 @@ export function Admin() {
                           min: 0,
                           step: 0.01
                         }}
-                        helperText="Preço em Dólar por milhão de Gil"
+                        helperText="Price in Dollar per million of Gil"
                       />
                     </Grid>
                   </Grid>
@@ -1445,7 +1445,7 @@ export function Admin() {
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Adicionar Gil (em milhões)"
+                        label="Add Gil (in millions)"
                         name="gilToAdd"
                         type="number"
                         inputProps={{
@@ -1459,26 +1459,26 @@ export function Admin() {
                             availableGil: Number(newProduct.availableGil || 0) + value
                           }));
                         }}
-                        helperText="Quantidade de Gil a ser adicionada ao estoque"
+                        helperText="Quantity of Gil to be added to stock"
                       />
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Gil Vendido (em milhões)"
+                        label="Sold Gil (in millions)"
                         value={newProduct.soldGil || 0}
                         disabled
                         margin="normal"
-                        helperText="Quantidade de Gil já vendida"
+                        helperText="Quantity of Gil already sold"
                       />
                     </Grid>
                     <Grid item xs={12}>
                       <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Gil Total após adição: {Number(newProduct.availableGil).toLocaleString()} milhões
+                          Total Gil after addition: {Number(newProduct.availableGil).toLocaleString()} millions
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Gil Disponível após adição: {(Number(newProduct.availableGil) - (newProduct.soldGil || 0)).toLocaleString()} milhões
+                          Available Gil after addition: {(Number(newProduct.availableGil) - (newProduct.soldGil || 0)).toLocaleString()} millions
                         </Typography>
                       </Box>
                     </Grid>
@@ -1494,13 +1494,13 @@ export function Admin() {
                     name="featured"
                   />
                 }
-                label="Produto em Destaque"
+                label="Product in Highlight"
                 sx={{ mt: 2 }}
               />
 
               <Box sx={{ my: 2 }}>
                 <Typography variant="subtitle1" gutterBottom color="text.primary">
-                  Imagem do Produto
+                  Product Image
                 </Typography>
                 <Paper sx={{ 
                   p: 2, 
@@ -1523,7 +1523,7 @@ export function Admin() {
                 fullWidth
                 sx={{ mt: 2 }}
               >
-                Adicionar Produto
+                Add Product
               </Button>
             </Box>
           </CardContent>
@@ -1535,7 +1535,7 @@ export function Admin() {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" color="text.primary">
-              Produtos Cadastrados
+              Products
             </Typography>
             <Button
               variant="outlined"
@@ -1543,7 +1543,7 @@ export function Admin() {
               onClick={fetchProducts}
               disabled={isLoadingProducts}
             >
-              Atualizar Lista
+              Update List
             </Button>
           </Box>
 
@@ -1582,7 +1582,7 @@ export function Admin() {
                       />
                       <Chip
                         size="small"
-                        label={product.inStock ? 'Em Estoque' : 'Fora de Estoque'}
+                        label={product.inStock ? 'In Stock' : 'Out of Stock'}
                         color={product.inStock ? 'success' : 'default'}
                         onClick={() => handleToggleStock(product.id, product.inStock)}
                         sx={{ cursor: 'pointer' }}
@@ -1590,7 +1590,7 @@ export function Admin() {
                       {product.featured && (
                         <Chip
                           size="small"
-                          label="Destaque"
+                          label="Highlight"
                           color="primary"
                         />
                       )}
@@ -1643,7 +1643,7 @@ export function Admin() {
         <Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h6" color="text.primary">
-              Gerenciar Pedidos ({orders.length})
+              Manage Orders ({orders.length})
             </Typography>
             <Button
               variant="outlined"
@@ -1651,13 +1651,13 @@ export function Admin() {
               onClick={fetchOrders}
               disabled={isLoadingOrders}
             >
-              {isLoadingOrders ? 'Atualizando...' : 'Atualizar Pedidos'}
+              {isLoadingOrders ? 'Updating...' : 'Update Orders'}
             </Button>
           </Box>
           
           {orders.length === 0 ? (
             <Alert severity="info">
-              Nenhum pedido encontrado.
+              No orders found.
             </Alert>
           ) : (
             <Box>

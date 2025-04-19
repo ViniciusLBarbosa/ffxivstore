@@ -54,14 +54,14 @@ export function ProductDetail() {
           const productData = productDoc.data();
           setProduct({ id: productDoc.id, ...productData });
           
-          // Se for um produto de leveling, inicializa o nível selecionado
+          // If it's a leveling product, initialize the selected level
           if (productData.category === 'leveling') {
             setSelectedLevel([1, productData.maxLevel || 90]);
             calculatePrices(productData, [1, productData.maxLevel || 90]);
           } else if (productData.category === 'gil') {
             setSelectedGilAmount(1);
             calculateGilPrice(1);
-            // Calcula o gil disponível
+            // Calculate available gil
             const available = productData.availableGil - (productData.soldGil || 0);
             setAvailableGil(available);
           } else {
@@ -69,11 +69,11 @@ export function ProductDetail() {
             setCurrentPriceUSD(Number(productData.priceUSD));
           }
         } else {
-          setError('Produto não encontrado');
+          setError('Product not found');
         }
       } catch (err) {
-        setError('Erro ao carregar produto');
-        console.error('Erro ao carregar produto:', err);
+        setError('Error loading product');
+        console.error('Error loading product:', err);
       } finally {
         setLoading(false);
       }
@@ -81,7 +81,7 @@ export function ProductDetail() {
 
     fetchProduct();
 
-    // Adiciona listener para atualizações de estoque de Gil
+    // Add listener for Gil stock updates
     const handleGilStockUpdate = (event) => {
       const { productId, inStock } = event.detail;
       if (productId === id) {
@@ -113,12 +113,12 @@ export function ProductDetail() {
     
     const levelDifference = endLevel - startLevel;
     
-    // Cálculo do preço em Reais
+    // Calculate price in BRL
     const basePrice = Number(product.basePrice || 0);
     const multiplier = Number(product.levelMultiplier || 0);
     const finalPriceBRL = basePrice + (levelDifference * multiplier);
     
-    // Cálculo do preço em Dólar
+    // Calculate price in USD
     const basePriceUSD = Number(product.basePriceUSD || 0);
     const multiplierUSD = Number(product.levelMultiplierUSD || 0);
     const finalPriceUSD = basePriceUSD + (levelDifference * multiplierUSD);
@@ -137,14 +137,14 @@ export function ProductDetail() {
 
   const handlePurchase = () => {
     if (!user) {
-      // Salva a URL atual antes de redirecionar
+      // Save current URL before redirecting
       sessionStorage.setItem('redirectUrl', window.location.pathname);
       navigate('/login');
       return;
     }
 
     if (product.category === 'leveling' && !selectedJob) {
-      setNotification('Por favor, selecione um job antes de continuar.');
+      setNotification('Please select a job before continuing.');
       return;
     }
 
@@ -164,12 +164,12 @@ export function ProductDetail() {
       };
     } else if (product.category === 'gil') {
       if (!selectedGilAmount || selectedGilAmount < 1) {
-        setNotification('Por favor, selecione uma quantidade de Gil válida.');
+        setNotification('Please select a valid Gil amount.');
         return;
       }
       
       if (selectedGilAmount > availableGil) {
-        setNotification('Quantidade de Gil selecionada não está disponível.');
+        setNotification('Selected Gil amount is not available.');
         return;
       }
 
@@ -179,7 +179,7 @@ export function ProductDetail() {
       productToAdd = {
         ...productToAdd,
         gilAmount: Number(selectedGilAmount),
-        totalGil: Number(selectedGilAmount) * 1000000, // Convertendo milhões para Gil
+        totalGil: Number(selectedGilAmount) * 1000000, // Converting millions to Gil
         priceBRL: gilPrice.toFixed(2),
         priceUSD: gilPriceUSD.toFixed(2),
         availableGil: product.availableGil,
@@ -204,7 +204,7 @@ export function ProductDetail() {
 
   const handleAddToCart = () => {
     if (product.category === 'leveling' && !selectedJob) {
-      setNotification('Por favor, selecione um job antes de adicionar ao carrinho.');
+      setNotification('Please select a job before adding to cart.');
       return;
     }
 
@@ -224,16 +224,14 @@ export function ProductDetail() {
       };
     } else if (product.category === 'gil') {
       if (!selectedGilAmount || selectedGilAmount < 1) {
-        setNotification('Por favor, selecione uma quantidade de Gil válida.');
+        setNotification('Please select a valid Gil amount.');
         return;
       }
       
       if (selectedGilAmount > availableGil) {
-        setNotification('Quantidade de Gil selecionada não está disponível.');
+        setNotification('Selected Gil amount is not available.');
         return;
       }
-
-      
 
       const gilPrice = Number(selectedGilAmount) * Number(product.pricePerMillion);
       const gilPriceUSD = Number(selectedGilAmount) * Number(product.pricePerMillionUSD);
@@ -241,14 +239,12 @@ export function ProductDetail() {
       productToAdd = {
         ...productToAdd,
         gilAmount: Number(selectedGilAmount),
-        totalGil: Number(selectedGilAmount) * 1000000, // Convertendo milhões para Gil
+        totalGil: Number(selectedGilAmount) * 1000000, // Converting millions to Gil
         priceBRL: gilPrice.toFixed(2),
         priceUSD: gilPriceUSD.toFixed(2),
         availableGil: product.availableGil,
         soldGil: product.soldGil || 0
       };
-
-      
     } else {
       productToAdd = {
         ...productToAdd,
@@ -261,18 +257,18 @@ export function ProductDetail() {
     setNotification(result.message);
     
     if (result.success) {
-      setTimeout(() => setNotification(''), 3000);
+      setTimeout(() => setNotification(''), 10000);
     }
   };
 
   const calculateGilPrice = (amount) => {
     if (!product || product.category !== 'gil') return;
     
-    // Calcula o preço em Reais
+    // Calculate price in BRL
     const pricePerMillion = Number(product.pricePerMillion || 0);
     const finalPriceBRL = amount * pricePerMillion;
     
-    // Calcula o preço em Dólar
+    // Calculate price in USD
     const pricePerMillionUSD = Number(product.pricePerMillionUSD || 0);
     const finalPriceUSD = amount * pricePerMillionUSD;
     
@@ -282,7 +278,7 @@ export function ProductDetail() {
 
   if (loading) {
     return (
-      <Typography sx={{ p: 2 }}>Carregando...</Typography>
+      <Typography sx={{ p: 2 }}>Loading...</Typography>
     );
   }
 
@@ -294,7 +290,7 @@ export function ProductDetail() {
     <Container maxWidth="lg" disableGutters>
       <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Box sx={{ display: 'flex', width: '100%', maxWidth: 1200 }}>
-          {/* Imagem do produto */}
+          {/* Product image */}
           <Box sx={{ width: '65%' }}>
             <Box 
               sx={{ 
@@ -302,7 +298,7 @@ export function ProductDetail() {
                 '&::before': {
                   content: '""',
                   display: 'block',
-                  paddingTop: '56.25%' // Proporção 16:9
+                  paddingTop: '56.25%' // 16:9 ratio
                 }
               }}
             >
@@ -322,7 +318,7 @@ export function ProductDetail() {
             </Box>
           </Box>
 
-          {/* Card de compra */}
+          {/* Purchase card */}
           <Box sx={{ width: '35%' }}>
             <Card sx={{ height: '100%', borderRadius: 0, p: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
@@ -331,7 +327,7 @@ export function ProductDetail() {
                 </Typography>
                 {!product.inStock && (
                   <Chip
-                    label="Fora de Estoque"
+                    label="Out of Stock"
                     color="error"
                     size="small"
                   />
@@ -341,13 +337,13 @@ export function ProductDetail() {
               {product.category === 'leveling' && (
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" gutterBottom>
-                    Selecione o Range de Level
+                    Select Level Range
                   </Typography>
                   <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Nível In."
+                        label="Start Level"
                         type="number"
                         value={selectedLevel[0]}
                         onChange={(e) => {
@@ -370,7 +366,7 @@ export function ProductDetail() {
                     <Grid item xs={12} sm={6}>
                       <TextField
                         fullWidth
-                        label="Nível Fi."
+                        label="End Level"
                         type="number"
                         value={selectedLevel[1]}
                         onChange={(e) => {
@@ -401,11 +397,11 @@ export function ProductDetail() {
                   />
                   
                   <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Selecione o Job</InputLabel>
+                    <InputLabel>Select Job</InputLabel>
                     <Select
                       value={selectedJob}
                       onChange={handleJobChange}
-                      label="Selecione o Job"
+                      label="Select Job"
                     >
                       {product.availableJobs?.map((job) => (
                         <MenuItem key={job} value={job}>
@@ -417,13 +413,13 @@ export function ProductDetail() {
 
                   <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(0, 0, 0, 0.03)', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Level Inicial: {selectedLevel[0]}
+                      Start Level: {selectedLevel[0]}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Level Final: {selectedLevel[1]}
+                      End Level: {selectedLevel[1]}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Job: {selectedJob || 'Não selecionado'}
+                      Job: {selectedJob || 'Not selected'}
                     </Typography>
                   </Box>
                 </Box>
@@ -432,13 +428,13 @@ export function ProductDetail() {
               {product.category === 'gil' && (
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" gutterBottom>
-                    Selecione a Quantidade de Gil
+                    Select Gil Amount
                   </Typography>
                   <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Milhões de Gil"
+                        label="Millions of Gil"
                         type="number"
                         value={selectedGilAmount}
                         onChange={(e) => {
@@ -474,10 +470,10 @@ export function ProductDetail() {
 
                   <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(0, 0, 0, 0.03)', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Quantidade: {selectedGilAmount} milhões de Gil
+                      Amount: {selectedGilAmount} million Gil
                     </Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Gil Disponível: {availableGil} milhões
+                      Available Gil: {availableGil} million
                     </Typography>
                   </Box>
                 </Box>
@@ -501,7 +497,7 @@ export function ProductDetail() {
                 sx={{ mt: 2 }}
                 disabled={!product.inStock || (product.category === 'leveling' && !selectedJob)}
               >
-                {product.inStock ? 'Comprar Agora' : 'Produto Indisponível'}
+                {product.inStock ? 'Buy Now' : 'Product Unavailable'}
               </Button>
 
               <Button
@@ -514,13 +510,14 @@ export function ProductDetail() {
                 sx={{ mt: 2 }}
                 disabled={!product.inStock || (product.category === 'leveling' && !selectedJob)}
               >
-                {product.inStock ? 'Adicionar ao Carrinho' : 'Fora de Estoque'}
+                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
               </Button>
+
 
               {notification && (
                 <>
                   <Alert 
-                    severity={notification.includes('já tem') ? 'error' : 'success'}
+                    severity={notification.includes('already has') ? 'error' : 'success'}
                     sx={{ 
                       mt: 1,
                       '& .MuiAlert-message': {
@@ -531,7 +528,7 @@ export function ProductDetail() {
                   >
                     {notification}
                   </Alert>
-                  {notification === 'Produto adicionado ao carrinho!' && (
+                  {notification.includes('successfully') && (
                     <Button
                       component={Link}
                       to="/cart"
@@ -540,7 +537,7 @@ export function ProductDetail() {
                       fullWidth
                       sx={{ mt: 1 }}
                     >
-                      Ir para o Carrinho
+                      Go to Cart
                     </Button>
                   )}
                 </>
@@ -557,12 +554,12 @@ export function ProductDetail() {
 
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom color="primary" sx={{ fontWeight: 'bold', mt: 3 }}>
-                  FORMAS DE PAGAMENTO
+                  PAYMENT METHODS
                 </Typography>
                 <Typography variant="body2" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                   <span>• Pix</span>
-                  <span>• Cartão de Crédito</span>
-                  <span>• Boleto Bancário</span>
+                  <span>• Credit Card</span>
+                  <span>• Bank Slip</span>
                 </Typography>
               </Box>
             </Card>
@@ -570,7 +567,7 @@ export function ProductDetail() {
         </Box>
       </Box>
 
-      {/* Seção de descrição */}
+      {/* Description section */}
       <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
         <Box sx={{ 
           bgcolor: 'background.paper',
@@ -581,7 +578,7 @@ export function ProductDetail() {
           borderColor: 'divider'
         }}>
           <Typography variant="h6" gutterBottom color="primary.main" sx={{ fontWeight: 'bold' }}>
-            DESCRIÇÃO
+            DESCRIPTION
           </Typography>
           <Typography 
             variant="body1" 

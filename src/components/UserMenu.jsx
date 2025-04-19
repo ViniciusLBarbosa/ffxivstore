@@ -55,7 +55,7 @@ export function UserMenu() {
 
   return (
     <>
-      <Tooltip title="Menu do usuário">
+      <Tooltip title="User Menu" arrow>
         <IconButton onClick={handleClick} sx={{ p: 0 }}>
           <Avatar
             src={user.photoURL}
@@ -79,34 +79,34 @@ export function UserMenu() {
           <ListItemIcon>
             <PersonIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Meu Perfil</ListItemText>
+          <ListItemText>Profile</ListItemText>
         </MenuItem>
         {user.isAdmin && (
           <MenuItem onClick={() => handleMenuClick('/admin')}>
             <ListItemIcon>
               <AdminIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Painel Admin</ListItemText>
+            <ListItemText>Admin Panel</ListItemText>
           </MenuItem>
         )}
         <MenuItem onClick={() => handleMenuClick('/orders')}>
           <ListItemIcon>
             <HistoryIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Histórico de Compras</ListItemText>
+          <ListItemText>Order History</ListItemText>
         </MenuItem>
         <MenuItem onClick={() => handleMenuClick('/settings')}>
           <ListItemIcon>
             <SettingsIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Configurações</ListItemText>
+          <ListItemText>Setings</ListItemText>
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Sair</ListItemText>
+          <ListItemText>Logout</ListItemText>
         </MenuItem>
       </Menu>
     </>
