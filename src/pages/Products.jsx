@@ -61,7 +61,7 @@ export function Products() {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          All Products
+          All Services
         </Typography>
         
         <Box sx={{ mb: 3 }}>
@@ -103,7 +103,7 @@ export function Products() {
 
         <TextField
           fullWidth
-          label="Search products"
+          label="Search Services"
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
