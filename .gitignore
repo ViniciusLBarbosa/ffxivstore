@@ -44,3 +44,12 @@ dist-ssr
 # System Files
 Thumbs.db
 .DS_Store
+
+# Sensitive files
+firebase-credentials.json
+bot/firebase-credentials.json
+bot/.env
+*.key
+*.pem
+*.cert
+discloud.config
